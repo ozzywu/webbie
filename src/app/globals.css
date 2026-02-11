@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream: #f5f0eb;
+  --cream-dark: #e8e0d8;
+  --charcoal: #1a1a1a;
+  --charcoal-light: #2a2a2a;
+  --foreground: var(--cream);
+  --muted: rgba(245, 240, 235, 0.6);
 }
 
 @theme inline {
-  --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-cream: var(--cream);
+  --color-cream-dark: var(--cream-dark);
+  --color-charcoal: var(--charcoal);
+  --color-charcoal-light: var(--charcoal-light);
+  --color-muted: var(--muted);
+  --font-serif: var(--font-playfair);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-space-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+button, [role="button"] {
+  user-select: none;
+}
+
+::selection {
+  background: var(--cream);
+  color: var(--charcoal);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide MapLibre GL chrome */
+.maplibregl-control-container {
+  display: none !important;
+}
+.maplibregl-ctrl-logo,
+.maplibregl-ctrl-attrib,
+.maplibregl-compact {
+  display: none !important;
 }
