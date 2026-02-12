@@ -1,13 +1,25 @@
 "use client";
 
-import { deleteArticleAction } from "@/app/admin/actions";
+import { deleteArticleAction, deleteCityLogAction } from "@/app/admin/actions";
 
-export function DeleteButton({ id }: { id: string }) {
+export function DeleteButton({
+  id,
+  action = "article",
+}: {
+  id: string;
+  action?: "article" | "cityLog";
+}) {
+  const deleteAction =
+    action === "cityLog" ? deleteCityLogAction : deleteArticleAction;
+  const label = action === "cityLog" ? "city log" : "article";
+
   return (
     <form
-      action={deleteArticleAction}
+      action={deleteAction}
       onSubmit={(e) => {
-        if (!window.confirm("Are you sure you want to delete this article?")) {
+        if (
+          !window.confirm(`Are you sure you want to delete this ${label}?`)
+        ) {
           e.preventDefault();
         }
       }}

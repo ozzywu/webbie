@@ -3,6 +3,7 @@
 import { useActionState, useState, useRef, useCallback } from "react";
 import { saveArticleAction, uploadImageAction } from "@/app/admin/actions";
 import type { Article } from "@/lib/articles";
+import { ImagePositioner } from "./ImagePositioner";
 import Link from "next/link";
 
 function generateSlug(title: string): string {
@@ -22,6 +23,9 @@ export function ArticleForm({ article }: { article?: Article }) {
   const [slug, setSlug] = useState(article?.slug || "");
   const [autoSlug, setAutoSlug] = useState(!article);
   const [coverImage, setCoverImage] = useState(article?.cover_image || "");
+  const [coverImagePosition, setCoverImagePosition] = useState(
+    article?.cover_image_position || "50% 50%"
+  );
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,6 +171,11 @@ export function ArticleForm({ article }: { article?: Article }) {
         </label>
         <input type="hidden" name="cover_image" value={coverImage} />
         <input
+          type="hidden"
+          name="cover_image_position"
+          value={coverImagePosition}
+        />
+        <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
@@ -175,33 +184,16 @@ export function ArticleForm({ article }: { article?: Article }) {
         />
 
         {coverImage ? (
-          <div className="relative group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={coverImage}
-              alt="Cover preview"
-              className="w-full h-48 object-cover rounded border"
-              style={{ borderColor: "rgba(0,0,0,0.15)" }}
-            />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1.5 bg-white rounded text-xs font-medium"
-                style={{ color: "#1a1a1a" }}
-              >
-                Replace
-              </button>
-              <button
-                type="button"
-                onClick={() => setCoverImage("")}
-                className="px-3 py-1.5 bg-white rounded text-xs font-medium"
-                style={{ color: "#dc2626" }}
-              >
-                Remove
-              </button>
-            </div>
-          </div>
+          <ImagePositioner
+            src={coverImage}
+            value={coverImagePosition}
+            onChange={setCoverImagePosition}
+            onReplace={() => fileInputRef.current?.click()}
+            onRemove={() => {
+              setCoverImage("");
+              setCoverImagePosition("50% 50%");
+            }}
+          />
         ) : (
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}

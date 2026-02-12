@@ -9,7 +9,18 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "fvrszmpltgjpjahbnsws.supabase.co",
+        port: "",
+        pathname: "/storage/**",
+      },
     ],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
   },
 };
 

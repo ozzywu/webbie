@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AllowScroll } from "@/components/AllowScroll";
 import Link from "next/link";
 
-export default async function AdminArticlesLayout({
+export default async function AdminCityLogsLayout({
   children,
 }: {
   children: React.ReactNode;

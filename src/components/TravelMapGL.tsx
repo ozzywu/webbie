@@ -96,6 +96,7 @@ export default function TravelMapGL({
       center: [lng, lat],
       zoom,
       attributionControl: false,
+      // @ts-expect-error — logoControl exists at runtime but missing from types
       logoControl: false,
       // Disable all user interaction — map only moves via flyTo
       dragPan: false,

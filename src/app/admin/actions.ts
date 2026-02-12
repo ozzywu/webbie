@@ -7,6 +7,11 @@ import {
   updateArticle,
   deleteArticle,
 } from "@/lib/articles";
+import {
+  createCityLog,
+  updateCityLog,
+  deleteCityLog,
+} from "@/lib/city-logs";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // --- Auth helpers ---
@@ -70,6 +75,8 @@ export async function saveArticleAction(
     slug: formData.get("slug") as string,
     date: formData.get("date") as string,
     cover_image: (formData.get("cover_image") as string) || null,
+    cover_image_position:
+      (formData.get("cover_image_position") as string) || "50% 50%",
     content: formData.get("content") as string,
     excerpt: (formData.get("excerpt") as string) || null,
     status: formData.get("status") as "draft" | "published",
@@ -116,8 +123,10 @@ export async function uploadImageAction(
     return { error: "No file provided" };
   }
 
+  const bucket = (formData.get("bucket") as string) || "article-images";
+
   // Ensure the storage bucket exists (idempotent)
-  await supabaseAdmin.storage.createBucket("article-images", {
+  await supabaseAdmin.storage.createBucket(bucket, {
     public: true,
     fileSizeLimit: 10 * 1024 * 1024, // 10MB
   });
@@ -127,7 +136,7 @@ export async function uploadImageAction(
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const { data, error } = await supabaseAdmin.storage
-    .from("article-images")
+    .from(bucket)
     .upload(fileName, file, { contentType: file.type });
 
   if (error) {
@@ -136,7 +145,56 @@ export async function uploadImageAction(
 
   const {
     data: { publicUrl },
-  } = supabaseAdmin.storage.from("article-images").getPublicUrl(data.path);
+  } = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path);
 
   return { url: publicUrl };
+}
+
+// --- City Log CRUD ---
+
+export async function saveCityLogAction(
+  _prevState: unknown,
+  formData: FormData
+): Promise<{ error?: string } | void> {
+  await requireAuth();
+
+  const id = formData.get("id") as string | null;
+  const imagesJson = formData.get("images") as string;
+
+  const logData = {
+    city: formData.get("city") as string,
+    native_name: formData.get("native_name") as string,
+    flag_emoji: (formData.get("flag_emoji") as string) || "",
+    one_liner: (formData.get("one_liner") as string) || "",
+    jots: (formData.get("jots") as string) || "",
+    images: imagesJson ? JSON.parse(imagesJson) : [],
+  };
+
+  try {
+    if (id) {
+      await updateCityLog(id, logData);
+    } else {
+      await createCityLog(logData);
+    }
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Failed to save city log";
+    return { error: message };
+  }
+
+  redirect("/admin/city-logs");
+}
+
+export async function deleteCityLogAction(formData: FormData) {
+  await requireAuth();
+
+  const id = formData.get("id") as string;
+
+  try {
+    await deleteCityLog(id);
+  } catch (error) {
+    console.error("Delete failed:", error);
+  }
+
+  redirect("/admin/city-logs");
 }

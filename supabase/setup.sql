@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS posts (
   slug TEXT NOT NULL UNIQUE,
   date DATE NOT NULL DEFAULT CURRENT_DATE,
   cover_image TEXT,
+  cover_image_position TEXT DEFAULT '50% 50%',
   content TEXT NOT NULL DEFAULT '',
   excerpt TEXT,
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),

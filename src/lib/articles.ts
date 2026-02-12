@@ -6,6 +6,7 @@ export interface Article {
   slug: string;
   date: string;
   cover_image: string | null;
+  cover_image_position: string | null;
   content: string;
   excerpt: string | null;
   status: "draft" | "published";

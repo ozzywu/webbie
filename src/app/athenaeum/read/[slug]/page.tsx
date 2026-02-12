@@ -76,6 +76,10 @@ export default async function ArticlePage({ params }: Props) {
                     src={article.cover_image}
                     alt=""
                     className="w-full h-full object-cover"
+                    style={{
+                      objectPosition:
+                        article.cover_image_position || "50% 50%",
+                    }}
                   />
                 </div>
               )}
