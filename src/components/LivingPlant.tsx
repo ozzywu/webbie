@@ -14,7 +14,7 @@ const ITERATIONS = 7; // detail level that matches the ~17x view
 const PLANT_SCALE = 30; // locked zoom level
 
 // ═══════════════════════════════════════════
-// Wind noise
+// Wind noise (ambient)
 // ═══════════════════════════════════════════
 
 function windNoise(y: number, t: number): number {

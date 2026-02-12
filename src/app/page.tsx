@@ -7,6 +7,10 @@ const LivingPlant = dynamic(() => import("@/components/LivingPlant"), {
   ssr: false,
 });
 
+const Birds = dynamic(() => import("@/components/Birds"), {
+  ssr: false,
+});
+
 const navItems = [
   { label: "Travel", href: "/travel" },
   { label: "Athenaeum", href: "/athenaeum" },
@@ -20,6 +24,9 @@ export default function Home() {
     <main className="h-screen w-screen overflow-hidden relative bg-[#0c2203]">
       {/* Canvas — wind-animated plant with infinite zoom */}
       <LivingPlant />
+
+      {/* Tiny stencil birds that loosely follow the cursor */}
+      <Birds />
 
       {/* Left — Greeting & Name */}
       <div className="absolute left-[7%] top-1/2 -translate-y-1/2 z-10">

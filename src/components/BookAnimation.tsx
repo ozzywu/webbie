@@ -28,7 +28,7 @@ const PAGES = [
     rot: 4,
     lift: 3,
     sx: 0.88,
-    o: 0.50,
+    o: 0.75,
     d: "M110 23 C125 21 185 25 192 30 C198 55 200 105 200 128 C196 133 125 139 110 139",
   },
   // ── concave free edge, curling inward ──
@@ -38,7 +38,7 @@ const PAGES = [
     rot: 10,
     lift: 9,
     sx: 0.55,
-    o: 0.40,
+    o: 0.60,
     d: "M110 25 C127 23 183 27 190 32 C184 58 182 102 188 126 C184 131 127 137 110 137",
   },
   // ── S-curve wave on right edge ──
@@ -48,7 +48,7 @@ const PAGES = [
     rot: 5,
     lift: 4,
     sx: 0.82,
-    o: 0.32,
+    o: 0.50,
     d: "M110 27 C129 25 180 29 187 34 C192 55 184 100 192 124 C188 129 129 135 110 135",
   },
   // ── corner curl at top-right ──
@@ -58,7 +58,7 @@ const PAGES = [
     rot: 13,
     lift: 11,
     sx: 0.42,
-    o: 0.38,
+    o: 0.55,
     d: "M110 26 C128 24 170 26 178 30 Q188 22 183 18 Q178 25 182 34 L190 126 C186 131 128 136 110 136",
   },
   // ── clean flat edge, acts as contrast ──
@@ -68,7 +68,7 @@ const PAGES = [
     rot: 3,
     lift: 2,
     sx: 0.93,
-    o: 0.18,
+    o: 0.35,
     d: "M110 29 C131 27 180 31 186 36 L194 123 C190 128 131 133 110 133",
   },
   // ── aggressive curl, page really caught by wind ──
@@ -78,7 +78,7 @@ const PAGES = [
     rot: 16,
     lift: 14,
     sx: 0.30,
-    o: 0.30,
+    o: 0.48,
     d: "M110 24 C126 22 165 24 174 28 Q186 18 180 14 Q172 22 178 34 C184 60 188 100 192 128 C188 133 126 138 110 138",
   },
   // ── wavy right edge, gentle undulation ──
@@ -88,7 +88,7 @@ const PAGES = [
     rot: 7,
     lift: 6,
     sx: 0.72,
-    o: 0.24,
+    o: 0.40,
     d: "M110 28 C130 26 178 30 185 35 C190 50 184 70 190 90 C196 110 188 122 192 124 C188 129 130 134 110 134",
   },
 ];
