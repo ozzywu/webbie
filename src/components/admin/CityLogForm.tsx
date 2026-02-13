@@ -2,51 +2,61 @@
 
 import { useActionState, useState, useRef, useCallback } from "react";
 import { saveCityLogAction, uploadImageAction } from "@/app/admin/actions";
-import { destinations } from "@/lib/destinations";
+import { CountrySearch } from "@/components/admin/CountrySearch";
+import { CountryFlag } from "@/components/CountryFlag";
 import type { CityLog } from "@/lib/city-logs";
 import Link from "next/link";
 
-export function CityLogForm({ cityLog }: { cityLog?: CityLog }) {
+interface CityLogFormProps {
+  cityLog?: CityLog;
+  /** Pre-fill city name (e.g. from destination click) */
+  defaultCity?: string;
+  /** Pre-fill country code (e.g. from destination click) */
+  defaultCountryCode?: string;
+}
+
+export function CityLogForm({
+  cityLog,
+  defaultCity,
+  defaultCountryCode,
+}: CityLogFormProps) {
   const [state, formAction, isPending] = useActionState(
     saveCityLogAction,
-    null
+    null,
   );
   const [images, setImages] = useState<string[]>(cityLog?.images || []);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [countryCode, setCountryCode] = useState(
+    cityLog?.country_code || defaultCountryCode || "",
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get list of destination city names for the dropdown
-  const cityNames = destinations.map((d) => d.city).sort();
+  const handleUpload = useCallback(async (files: FileList | File[]) => {
+    const imageFiles = Array.from(files).filter((f) =>
+      f.type.startsWith("image/"),
+    );
+    if (imageFiles.length === 0) return;
 
-  const handleUpload = useCallback(
-    async (files: FileList | File[]) => {
-      const imageFiles = Array.from(files).filter((f) =>
-        f.type.startsWith("image/")
-      );
-      if (imageFiles.length === 0) return;
-
-      setUploading(true);
-      try {
-        const newUrls: string[] = [];
-        for (const file of imageFiles) {
-          const fd = new FormData();
-          fd.append("file", file);
-          fd.append("bucket", "city-log-images");
-          const result = await uploadImageAction(fd);
-          if (result.url) {
-            newUrls.push(result.url);
-          } else if (result.error) {
-            alert("Upload failed: " + result.error);
-          }
+    setUploading(true);
+    try {
+      const newUrls: string[] = [];
+      for (const file of imageFiles) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("bucket", "city-log-images");
+        const result = await uploadImageAction(fd);
+        if (result.url) {
+          newUrls.push(result.url);
+        } else if (result.error) {
+          alert("Upload failed: " + result.error);
         }
-        setImages((prev) => [...prev, ...newUrls]);
-      } finally {
-        setUploading(false);
       }
-    },
-    []
-  );
+      setImages((prev) => [...prev, ...newUrls]);
+    } finally {
+      setUploading(false);
+    }
+  }, []);
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
@@ -83,6 +93,7 @@ export function CityLogForm({ cityLog }: { cityLog?: CityLog }) {
     <form action={formAction} className="flex flex-col gap-5">
       {cityLog && <input type="hidden" name="id" value={cityLog.id} />}
       <input type="hidden" name="images" value={JSON.stringify(images)} />
+      <input type="hidden" name="country_code" value={countryCode} />
 
       {state?.error && (
         <div
@@ -98,74 +109,71 @@ export function CityLogForm({ cityLog }: { cityLog?: CityLog }) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* City — free text input */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium" style={labelStyle}>
             City
           </label>
-          <select
+          <input
             name="city"
+            type="text"
             required
-            defaultValue={cityLog?.city || ""}
+            defaultValue={cityLog?.city || defaultCity || ""}
+            placeholder="e.g. Copenhagen"
             className={inputClass}
             style={inputStyle}
+          />
+        </div>
+
+        {/* Country — searchable with flag */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium" style={labelStyle}>
+            Country
+          </label>
+          <CountrySearch
+            value={countryCode}
+            onChange={setCountryCode}
+            className={inputClass}
+            style={inputStyle}
+          />
+        </div>
+      </div>
+
+      {/* One-liner */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium" style={labelStyle}>
+          One-liner
+        </label>
+        <input
+          name="one_liner"
+          type="text"
+          defaultValue={cityLog?.one_liner || ""}
+          placeholder="Short description of the city..."
+          className={inputClass}
+          style={inputStyle}
+        />
+      </div>
+
+      {/* Preview of flag + native name */}
+      {countryCode && (
+        <div
+          className="flex items-center gap-2 px-4 py-3 rounded-lg"
+          style={{
+            background: "rgba(103,0,0,0.03)",
+            border: "1px solid rgba(103,0,0,0.08)",
+          }}
+        >
+          <CountryFlag code={countryCode} className="w-8 h-6 rounded-[2px]" />
+          <span
+            className="text-sm"
+            style={{ color: "#670000", fontFamily: "var(--font-geist-sans)" }}
           >
-            <option value="" disabled>
-              Select a city...
-            </option>
-            {cityNames.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
+            Flag preview
+          </span>
         </div>
+      )}
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" style={labelStyle}>
-            Native Name
-          </label>
-          <input
-            name="native_name"
-            type="text"
-            required
-            defaultValue={cityLog?.native_name || ""}
-            placeholder="e.g. København"
-            className={inputClass}
-            style={inputStyle}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" style={labelStyle}>
-            Flag Emoji
-          </label>
-          <input
-            name="flag_emoji"
-            type="text"
-            defaultValue={cityLog?.flag_emoji || ""}
-            placeholder="e.g. 🇩🇰"
-            className={inputClass}
-            style={inputStyle}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" style={labelStyle}>
-            One-liner
-          </label>
-          <input
-            name="one_liner"
-            type="text"
-            defaultValue={cityLog?.one_liner || ""}
-            placeholder="Short description of the city..."
-            className={inputClass}
-            style={inputStyle}
-          />
-        </div>
-      </div>
-
+      {/* Jots */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium" style={labelStyle}>
           Jots
@@ -180,6 +188,7 @@ export function CityLogForm({ cityLog }: { cityLog?: CityLog }) {
         />
       </div>
 
+      {/* Photos */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium" style={labelStyle}>
           Photos

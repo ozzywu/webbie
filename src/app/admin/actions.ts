@@ -2,17 +2,26 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  createArticle,
-  updateArticle,
-  deleteArticle,
-} from "@/lib/articles";
-import {
-  createCityLog,
-  updateCityLog,
-  deleteCityLog,
-} from "@/lib/city-logs";
+import { createArticle, updateArticle, deleteArticle } from "@/lib/articles";
+import { createCityLog, updateCityLog, deleteCityLog } from "@/lib/city-logs";
+import { createBook, updateBook, deleteBook } from "@/lib/books";
+import { createNote, updateNote, deleteNote } from "@/lib/notes";
 import { supabaseAdmin } from "@/lib/supabase";
+
+// --- Error helpers ---
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
+  return fallback;
+}
 
 // --- Auth helpers ---
 
@@ -36,7 +45,7 @@ async function requireAuth() {
 
 export async function loginAction(
   _prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ error?: string } | void> {
   const password = formData.get("password") as string;
 
@@ -65,7 +74,7 @@ export async function logoutAction() {
 
 export async function saveArticleAction(
   _prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ error?: string } | void> {
   await requireAuth();
 
@@ -89,9 +98,8 @@ export async function saveArticleAction(
       await createArticle(articleData);
     }
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Failed to save article";
-    return { error: message };
+    console.error("saveArticleAction error:", error);
+    return { error: extractErrorMessage(error, "Failed to save article") };
   }
 
   redirect("/admin/articles");
@@ -114,7 +122,7 @@ export async function deleteArticleAction(formData: FormData) {
 // --- Image Upload ---
 
 export async function uploadImageAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<{ url?: string; error?: string }> {
   await requireAuth();
 
@@ -154,16 +162,19 @@ export async function uploadImageAction(
 
 export async function saveCityLogAction(
   _prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ error?: string } | void> {
   await requireAuth();
 
   const id = formData.get("id") as string | null;
   const imagesJson = formData.get("images") as string;
 
+  const city = formData.get("city") as string;
+
   const logData = {
-    city: formData.get("city") as string,
-    native_name: formData.get("native_name") as string,
+    city,
+    country_code: (formData.get("country_code") as string) || "",
+    native_name: (formData.get("native_name") as string) || "",
     flag_emoji: (formData.get("flag_emoji") as string) || "",
     one_liner: (formData.get("one_liner") as string) || "",
     jots: (formData.get("jots") as string) || "",
@@ -177,9 +188,8 @@ export async function saveCityLogAction(
       await createCityLog(logData);
     }
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Failed to save city log";
-    return { error: message };
+    console.error("saveCityLogAction error:", error);
+    return { error: extractErrorMessage(error, "Failed to save city log") };
   }
 
   redirect("/admin/city-logs");
@@ -197,4 +207,103 @@ export async function deleteCityLogAction(formData: FormData) {
   }
 
   redirect("/admin/city-logs");
+}
+
+// --- Book CRUD ---
+
+export async function saveBookAction(
+  _prevState: unknown,
+  formData: FormData,
+): Promise<{ error?: string } | void> {
+  await requireAuth();
+
+  const id = formData.get("id") as string | null;
+  const bookData = {
+    title: formData.get("title") as string,
+    author: formData.get("author") as string,
+    slug: formData.get("slug") as string,
+    date: formData.get("date") as string,
+    cover_image: (formData.get("cover_image") as string) || null,
+    cover_image_position:
+      (formData.get("cover_image_position") as string) || "50% 50%",
+    content: formData.get("content") as string,
+    excerpt: (formData.get("excerpt") as string) || null,
+    status: formData.get("status") as "draft" | "published",
+  };
+
+  try {
+    if (id) {
+      await updateBook(id, bookData);
+    } else {
+      await createBook(bookData);
+    }
+  } catch (error: unknown) {
+    console.error("saveBookAction error:", error);
+    return { error: extractErrorMessage(error, "Failed to save book") };
+  }
+
+  redirect("/admin/books");
+}
+
+export async function deleteBookAction(formData: FormData) {
+  await requireAuth();
+
+  const id = formData.get("id") as string;
+
+  try {
+    await deleteBook(id);
+  } catch (error) {
+    console.error("Delete failed:", error);
+  }
+
+  redirect("/admin/books");
+}
+
+// --- Note CRUD ---
+
+export async function saveNoteAction(
+  _prevState: unknown,
+  formData: FormData,
+): Promise<{ error?: string } | void> {
+  await requireAuth();
+
+  const id = formData.get("id") as string | null;
+  const noteData = {
+    title: formData.get("title") as string,
+    slug: formData.get("slug") as string,
+    date: formData.get("date") as string,
+    cover_image: (formData.get("cover_image") as string) || null,
+    cover_image_position:
+      (formData.get("cover_image_position") as string) || "50% 50%",
+    content: formData.get("content") as string,
+    excerpt: (formData.get("excerpt") as string) || null,
+    status: formData.get("status") as "draft" | "published",
+  };
+
+  try {
+    if (id) {
+      await updateNote(id, noteData);
+    } else {
+      await createNote(noteData);
+    }
+  } catch (error: unknown) {
+    console.error("saveNoteAction error:", error);
+    return { error: extractErrorMessage(error, "Failed to save note") };
+  }
+
+  redirect("/admin/notes");
+}
+
+export async function deleteNoteAction(formData: FormData) {
+  await requireAuth();
+
+  const id = formData.get("id") as string;
+
+  try {
+    await deleteNote(id);
+  } catch (error) {
+    console.error("Delete failed:", error);
+  }
+
+  redirect("/admin/notes");
 }

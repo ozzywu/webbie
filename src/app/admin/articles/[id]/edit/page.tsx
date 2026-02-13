@@ -16,19 +16,5 @@ export default async function EditArticlePage({ params }: Props) {
     notFound();
   }
 
-  return (
-    <div>
-      <h1
-        className="text-xl mb-6"
-        style={{
-          color: "#1a1a1a",
-          fontFamily: "var(--font-geist-sans)",
-          fontWeight: 500,
-        }}
-      >
-        Edit Article
-      </h1>
-      <ArticleForm article={article} />
-    </div>
-  );
+  return <ArticleForm article={article} />;
 }

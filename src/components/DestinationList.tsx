@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Destination } from "@/lib/destinations";
 
@@ -34,6 +34,15 @@ export default function DestinationList({
   const total = destinations.length;
   const activeDestination = destinations[activeIndex];
   const scrollAccum = useRef(0);
+  const isAnimating = useRef(false);
+  const animationTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimer.current) clearInterval(animationTimer.current);
+    };
+  }, []);
 
   // Build the visible window: VISIBLE_ITEMS slots, center = active
   const slots = Array.from({ length: VISIBLE_ITEMS }, (_, i) => {
@@ -64,6 +73,7 @@ export default function DestinationList({
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       e.preventDefault();
+      if (isAnimating.current) return;
       scrollAccum.current += e.deltaY;
       const threshold = 40;
       if (scrollAccum.current > threshold) {
@@ -77,12 +87,45 @@ export default function DestinationList({
     [moveBy],
   );
 
-  // Click handler: item at `offset` from center → move by that offset
+  // Click handler: step through one position at a time for smooth animation
   const handleItemClick = useCallback(
     (offset: number) => {
-      if (offset !== 0) moveBy(offset);
+      if (offset === 0 || isAnimating.current) return;
+
+      const steps = Math.abs(offset);
+      const direction = offset > 0 ? 1 : -1;
+
+      // Single step — just move directly
+      if (steps === 1) {
+        moveBy(direction);
+        return;
+      }
+
+      // Multi-step — precompute all intermediate indices, then step through
+      const indices: number[] = [];
+      for (let i = 1; i <= steps; i++) {
+        indices.push(wrap(activeIndex + direction * i, total));
+      }
+
+      isAnimating.current = true;
+      let step = 0;
+
+      // Fire the first step immediately
+      onSelect(indices[step]);
+      step++;
+
+      animationTimer.current = setInterval(() => {
+        if (step >= indices.length) {
+          if (animationTimer.current) clearInterval(animationTimer.current);
+          animationTimer.current = null;
+          isAnimating.current = false;
+          return;
+        }
+        onSelect(indices[step]);
+        step++;
+      }, 90);
     },
-    [moveBy],
+    [activeIndex, total, onSelect, moveBy],
   );
 
   return (
@@ -91,50 +134,11 @@ export default function DestinationList({
       style={{ height: CONTAINER_HEIGHT }}
       onWheel={handleWheel}
     >
-      {/* Column 1: Keyword */}
-      <div
-        className="relative flex items-center justify-end"
-        style={{ width: 60, height: CONTAINER_HEIGHT }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={activeDestination?.keyword}
-            className="text-xs font-sans select-none"
-            style={{ color: "var(--cream)", opacity: 0.5 }}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 0.5, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          >
-            {activeDestination?.keyword}
-          </motion.span>
-        </AnimatePresence>
-      </div>
-
-      {/* Column 2: Divider */}
-      <div
-        className="relative flex flex-col items-center"
-        style={{ width: 1, height: CONTAINER_HEIGHT }}
-      >
-        <div
-          className="absolute top-0 bottom-0 w-px"
-          style={{ backgroundColor: "var(--cream)", opacity: 0.12 }}
-        />
-        <div
-          className="absolute top-1/2 -translate-y-1/2 w-px"
-          style={{
-            height: 11,
-            backgroundColor: "var(--cream)",
-            opacity: 0.4,
-          }}
-        />
-      </div>
-
-      {/* Column 3: Circular city list — masked edges instead of color overlays */}
+      {/* Column 1: Circular city list — right-aligned, masked edges */}
       <div
         className="relative overflow-hidden"
         style={{
-          width: 110,
+          width: 95,
           height: CONTAINER_HEIGHT,
           WebkitMaskImage:
             "linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)",
@@ -152,7 +156,7 @@ export default function DestinationList({
               <motion.button
                 key={dest.id}
                 onClick={() => handleItemClick(offset)}
-                className="absolute left-0 w-full text-left cursor-pointer bg-transparent border-none outline-none p-0"
+                className="absolute right-0 w-full text-right cursor-pointer bg-transparent border-none outline-none p-0"
                 style={{
                   height: ITEM_HEIGHT,
                   WebkitTapHighlightColor: "transparent",
@@ -181,6 +185,32 @@ export default function DestinationList({
             );
           })}
         </AnimatePresence>
+      </div>
+
+      {/* Column 3: Divider */}
+      <div
+        className="relative flex flex-col items-center"
+        style={{ width: 1, height: CONTAINER_HEIGHT }}
+      >
+        <div
+          className="absolute top-0 bottom-0 w-px"
+          style={{
+            backgroundColor: "var(--cream)",
+            opacity: 0.12,
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)",
+          }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-px"
+          style={{
+            height: 11,
+            backgroundColor: "var(--cream)",
+            opacity: 0.4,
+          }}
+        />
       </div>
 
       {/* Column 4: "View log" — only visible when the active city has a log */}

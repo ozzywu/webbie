@@ -29,7 +29,10 @@ export default function Home() {
       <Birds />
 
       {/* Left — Greeting & Name */}
-      <div className="absolute left-[7%] top-1/2 -translate-y-1/2 z-10">
+      <div
+        data-bird-avoid
+        className="absolute left-[7%] top-1/2 -translate-y-1/2 z-10"
+      >
         <p
           className="text-[32px] leading-tight mb-2"
           style={{
@@ -51,7 +54,10 @@ export default function Home() {
       </div>
 
       {/* Right — Navigation */}
-      <nav className="absolute right-[7%] top-1/2 -translate-y-1/2 z-10 flex flex-col items-end gap-[6px]">
+      <nav
+        data-bird-avoid
+        className="absolute right-[7%] top-1/2 -translate-y-1/2 z-10 flex flex-col items-end gap-[6px]"
+      >
         {navItems.map((item) => (
           <Link
             key={item.label}

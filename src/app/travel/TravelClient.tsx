@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { destinations } from "@/lib/destinations";
+import SiteNav from "@/components/SiteNav";
 import type { CityLog } from "@/lib/city-logs";
 import DestinationList from "@/components/DestinationList";
 import TravelLogPanel from "@/components/TravelLogPanel";
@@ -121,14 +121,10 @@ export default function TravelClient({
         />
       </div>
 
-      {/* Back to home */}
-      <Link
-        href="/"
-        className="absolute top-8 left-8 z-20 text-xs font-sans hover:opacity-100 transition-opacity duration-300"
-        style={{ color: "#FFEEDD", opacity: 0.4 }}
-      >
-        ← Home
-      </Link>
+      {/* Site navigation */}
+      <div className="absolute left-0 top-0 z-20">
+        <SiteNav />
+      </div>
 
       {/* Destination List — Left side, vertically centered */}
       <div className="absolute left-8 top-1/2 -translate-y-1/2 z-20">

@@ -1,4 +1,4 @@
-import { getArticleBySlug } from "@/lib/articles";
+import { getNoteBySlug } from "@/lib/notes";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AllowScroll } from "@/components/AllowScroll";
@@ -23,15 +23,15 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const article = await getArticleBySlug(slug);
+  const note = await getNoteBySlug(slug);
 
-  if (!article) {
-    return { title: "Article Not Found" };
+  if (!note) {
+    return { title: "Note Not Found" };
   }
 
   return {
-    title: `${article.title} — Osmond Wu`,
-    description: article.excerpt || undefined,
+    title: `${note.title} — Osmond Wu`,
+    description: note.excerpt || undefined,
   };
 }
 
@@ -40,11 +40,11 @@ function formatDate(dateStr: string) {
   return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
 }
 
-export default async function ArticlePage({ params }: Props) {
+export default async function NotePage({ params }: Props) {
   const { slug } = await params;
-  const article = await getArticleBySlug(slug);
+  const note = await getNoteBySlug(slug);
 
-  if (!article) {
+  if (!note) {
     notFound();
   }
 
@@ -52,21 +52,21 @@ export default async function ArticlePage({ params }: Props) {
     <>
       <AllowScroll />
       <main className="min-h-screen" style={{ background: "#f3f0e9" }}>
-        {/* Fixed red accent marks — anchored to viewport center, don't scroll */}
+        {/* Fixed red accent marks */}
         <FixedRedLines />
 
         <div
           data-article-container
-          className="max-w-[730px] mx-auto min-h-screen flex overflow-hidden"
+          className="max-w-[730px] mx-auto min-h-screen flex"
         >
-          {/* Left decorative line — draws in from top on load */}
+          {/* Left decorative line */}
           <AnimatedLine side="left" delay={0.05} />
 
           {/* Content */}
-          <AnimatedContent className="flex-1 min-w-0 flex flex-col gap-5 p-6">
+          <AnimatedContent className="flex-1 flex flex-col gap-5 p-6">
             {/* Back button */}
             <Link
-              href="/athenaeum"
+              href="/athenaeum?tab=notes"
               className="text-sm hover:opacity-70 transition-opacity w-fit"
               style={{
                 color: "#9d7c7c",
@@ -76,21 +76,21 @@ export default async function ArticlePage({ params }: Props) {
               back
             </Link>
 
-            {/* Article content */}
+            {/* Note content */}
             <div className="flex flex-col gap-10">
               {/* Hero image */}
-              {article.cover_image && (
+              {note.cover_image && (
                 <div
                   className="w-full overflow-hidden"
                   style={{ aspectRatio: "680/315" }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={article.cover_image}
+                    src={note.cover_image}
                     alt=""
                     className="w-full h-full object-cover"
                     style={{
-                      objectPosition: article.cover_image_position || "50% 50%",
+                      objectPosition: note.cover_image_position || "50% 50%",
                     }}
                   />
                 </div>
@@ -108,7 +108,7 @@ export default async function ArticlePage({ params }: Props) {
                       fontWeight: 500,
                     }}
                   >
-                    {article.title}
+                    {note.title}
                   </h1>
                   <span
                     className="text-base shrink-0 ml-4"
@@ -117,14 +117,14 @@ export default async function ArticlePage({ params }: Props) {
                       fontFamily: "var(--font-geist-sans)",
                     }}
                   >
-                    {formatDate(article.date)}
+                    {formatDate(note.date)}
                   </span>
                 </div>
 
                 {/* Body */}
-                {isHtmlContent(article.content) ? (
-                  <ArticleHtmlContent content={article.content} />
-                ) : (
+                {note.content && isHtmlContent(note.content) ? (
+                  <NoteHtmlContent content={note.content} />
+                ) : note.content ? (
                   <article
                     style={{
                       color: "#9d7c7c",
@@ -244,44 +244,15 @@ export default async function ArticlePage({ params }: Props) {
                         ),
                       }}
                     >
-                      {article.content}
+                      {note.content}
                     </ReactMarkdown>
                   </article>
-                )}
-
-                {/* Source attribution */}
-                {article.source &&
-                  article.source !== "original" &&
-                  article.source_url && (
-                    <div
-                      className="mt-8 pt-6"
-                      style={{
-                        borderTop: "1px solid rgba(157, 124, 124, 0.2)",
-                      }}
-                    >
-                      <a
-                        href={article.source_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm hover:opacity-70 transition-opacity"
-                        style={{
-                          color: "#9d7c7c",
-                          fontFamily: "var(--font-geist-sans)",
-                        }}
-                      >
-                        Originally published on{" "}
-                        {article.source === "substack"
-                          ? "Substack"
-                          : "X (Twitter)"}
-                        {" →"}
-                      </a>
-                    </div>
-                  )}
+                ) : null}
               </div>
             </div>
           </AnimatedContent>
 
-          {/* Right decorative line — draws in from top on load */}
+          {/* Right decorative line */}
           <AnimatedLine side="right" delay={0.3} />
         </div>
       </main>
@@ -291,120 +262,34 @@ export default async function ArticlePage({ params }: Props) {
 
 // ─── HTML Content Renderer ──────────────────────────────────────────
 
-const ARTICLE_HTML_STYLES = `
-  .article-html {
-    color: #9d7c7c;
-    font-size: 18px;
-    font-family: var(--font-geist-sans);
-    line-height: 1.7;
-  }
-  .article-html > * + * {
-    margin-top: 0;
-  }
-  .article-html p {
-    margin-bottom: 1.2em;
-  }
-  .article-html h1 {
-    color: #670000;
-    font-size: 22px;
-    font-weight: 500;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-  }
-  .article-html h2 {
-    color: #670000;
-    font-size: 20px;
-    font-weight: 500;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-  }
-  .article-html h3 {
-    color: #7a5555;
-    font-size: 18px;
-    font-weight: 500;
-    margin-top: 1.2em;
-    margin-bottom: 0.4em;
-  }
-  .article-html strong {
-    color: #7a5555;
-    font-weight: 500;
-  }
-  .article-html blockquote {
-    border-left: 2px solid rgba(157, 124, 124, 0.4);
-    padding-left: 16px;
-    margin: 1.2em 0;
-    font-style: italic;
-  }
-  .article-html a {
-    color: #670000;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .article-html a:hover {
-    opacity: 0.8;
-  }
-  .article-html ul {
-    list-style-type: disc;
-    padding-left: 1.5em;
-    margin-bottom: 1.2em;
-  }
-  .article-html ol {
-    list-style-type: decimal;
-    padding-left: 1.5em;
-    margin-bottom: 1.2em;
-  }
-  .article-html li {
-    margin-bottom: 0.3em;
-  }
-  .article-html hr {
-    border: none;
-    border-top: 1px solid rgba(157, 124, 124, 0.3);
-    margin: 2em 0;
-  }
-  .article-html code {
-    background: rgba(157, 124, 124, 0.1);
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-family: var(--font-space-mono), monospace;
-    font-size: 0.9em;
-  }
-  .article-html pre {
-    background: #2a2020;
-    color: #e0d5d5;
-    padding: 16px 20px;
-    border-radius: 6px;
-    overflow-x: hidden;
-    margin: 1.4em 0;
-    font-size: 14px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-  .article-html pre code {
-    background: none;
-    padding: 0;
-    color: inherit;
-    font-size: inherit;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-  .article-html img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 4px;
-    margin: 1em 0;
-  }
-  .article-html u {
-    text-underline-offset: 2px;
-  }
+const NOTE_HTML_STYLES = `
+  .note-html { color: #9d7c7c; font-size: 18px; font-family: var(--font-geist-sans); line-height: 1.7; }
+  .note-html > * + * { margin-top: 0; }
+  .note-html p { margin-bottom: 1.2em; }
+  .note-html h1 { color: #670000; font-size: 22px; font-weight: 500; margin-top: 1.5em; margin-bottom: 0.5em; }
+  .note-html h2 { color: #670000; font-size: 20px; font-weight: 500; margin-top: 1.5em; margin-bottom: 0.5em; }
+  .note-html h3 { color: #7a5555; font-size: 18px; font-weight: 500; margin-top: 1.2em; margin-bottom: 0.4em; }
+  .note-html strong { color: #7a5555; font-weight: 500; }
+  .note-html blockquote { border-left: 2px solid rgba(157, 124, 124, 0.4); padding-left: 16px; margin: 1.2em 0; font-style: italic; }
+  .note-html a { color: #670000; text-decoration: underline; text-underline-offset: 2px; }
+  .note-html a:hover { opacity: 0.8; }
+  .note-html ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.2em; }
+  .note-html ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1.2em; }
+  .note-html li { margin-bottom: 0.3em; }
+  .note-html hr { border: none; border-top: 1px solid rgba(157, 124, 124, 0.3); margin: 2em 0; }
+  .note-html code { background: rgba(157, 124, 124, 0.1); padding: 2px 5px; border-radius: 3px; font-family: var(--font-space-mono), monospace; font-size: 0.9em; }
+  .note-html pre { background: #2a2020; color: #e0d5d5; padding: 16px 20px; border-radius: 6px; overflow-x: auto; margin: 1.4em 0; font-size: 14px; line-height: 1.6; }
+  .note-html pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .note-html img { max-width: 100%; height: auto; border-radius: 4px; margin: 1em 0; }
+  .note-html u { text-underline-offset: 2px; }
 `;
 
-function ArticleHtmlContent({ content }: { content: string }) {
+function NoteHtmlContent({ content }: { content: string }) {
   return (
     <>
-      <style>{ARTICLE_HTML_STYLES}</style>
+      <style>{NOTE_HTML_STYLES}</style>
       <article
-        className="article-html"
+        className="note-html"
         dangerouslySetInnerHTML={{ __html: content }}
       />
     </>

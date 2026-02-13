@@ -2,15 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
-import Link from "next/link";
-
-const navItems = [
-  { label: "Travel", href: "/travel" },
-  { label: "Write", href: "#" },
-  { label: "Read", href: "/athenaeum/read" },
-  { label: "About", href: "/about" },
-  { label: "Inspo", href: "/inspo" },
-];
+import SiteNav from "@/components/SiteNav";
 
 const workEntries = [
   {
@@ -85,21 +77,9 @@ export default function WorkPage() {
       }}
     >
       {/* ── Navigation ── */}
-      <nav className="absolute left-[29px] top-[30px] z-10 flex items-center gap-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className="text-sm transition-opacity duration-300 hover:opacity-100"
-            style={{
-              color: item.label === "Read" ? "#670000" : "#9d7c7c",
-              opacity: item.label === "Read" ? 1 : 0.5,
-            }}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <div className="absolute left-0 top-0 z-10">
+        <SiteNav variant="light" />
+      </div>
 
       {/* ── Line-drawing on load ── */}
 
@@ -113,19 +93,6 @@ export default function WorkPage() {
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
         transition={{ duration: 1.2, ease: LINE_EASE, delay: 0.05 }}
-      />
-
-      {/* Horizontal divider */}
-      <motion.div
-        className="absolute left-0 right-0 h-px"
-        style={{
-          top: "40%",
-          background: "rgba(157, 124, 124, 0.3)",
-          transformOrigin: "left",
-        }}
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 1.0, ease: LINE_EASE, delay: 0.15 }}
       />
 
       {/* Main vertical divider */}
@@ -147,7 +114,6 @@ export default function WorkPage() {
           className="absolute w-px"
           style={{
             left: "57%",
-            transform: "translateX(-50%)",
             background: "#670000",
             zIndex: 10,
           }}

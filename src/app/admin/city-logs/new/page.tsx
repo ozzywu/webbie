@@ -1,6 +1,12 @@
 import { CityLogForm } from "@/components/admin/CityLogForm";
 
-export default function NewCityLogPage() {
+export default async function NewCityLogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ city?: string; country?: string }>;
+}) {
+  const { city, country } = await searchParams;
+
   return (
     <div>
       <h1
@@ -11,9 +17,9 @@ export default function NewCityLogPage() {
           fontWeight: 500,
         }}
       >
-        New City Log
+        {city ? `Add Log — ${city}` : "New City Log"}
       </h1>
-      <CityLogForm />
+      <CityLogForm defaultCity={city} defaultCountryCode={country} />
     </div>
   );
 }

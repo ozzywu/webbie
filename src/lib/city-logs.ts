@@ -3,6 +3,7 @@ import { supabase, supabaseAdmin } from "./supabase";
 export interface CityLog {
   id: string;
   city: string;
+  country_code: string;
   native_name: string;
   flag_emoji: string;
   one_liner: string;
@@ -63,9 +64,7 @@ export async function getCityLogById(id: string): Promise<CityLog | null> {
 }
 
 // Admin writes
-export async function createCityLog(
-  log: Partial<CityLog>
-): Promise<CityLog> {
+export async function createCityLog(log: Partial<CityLog>): Promise<CityLog> {
   const { data, error } = await supabaseAdmin
     .from("city_logs")
     .insert(log)
@@ -78,7 +77,7 @@ export async function createCityLog(
 
 export async function updateCityLog(
   id: string,
-  updates: Partial<CityLog>
+  updates: Partial<CityLog>,
 ): Promise<CityLog> {
   const { data, error } = await supabaseAdmin
     .from("city_logs")
@@ -92,9 +91,6 @@ export async function updateCityLog(
 }
 
 export async function deleteCityLog(id: string): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("city_logs")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabaseAdmin.from("city_logs").delete().eq("id", id);
   if (error) throw error;
 }

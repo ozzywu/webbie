@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState, useState, useRef, useCallback } from "react";
-import { saveArticleAction, uploadImageAction } from "@/app/admin/actions";
-import type { Article } from "@/lib/articles";
+import { saveBookAction, uploadImageAction } from "@/app/admin/actions";
+import type { Book } from "@/lib/books";
 import { ImagePositioner } from "./ImagePositioner";
 import { RichTextEditor } from "./RichTextEditor";
 import Link from "next/link";
@@ -16,16 +16,13 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export function ArticleForm({ article }: { article?: Article }) {
-  const [state, formAction, isPending] = useActionState(
-    saveArticleAction,
-    null,
-  );
-  const [slug, setSlug] = useState(article?.slug || "");
-  const [autoSlug, setAutoSlug] = useState(!article);
-  const [coverImage, setCoverImage] = useState(article?.cover_image || "");
+export function BookForm({ book }: { book?: Book }) {
+  const [state, formAction, isPending] = useActionState(saveBookAction, null);
+  const [slug, setSlug] = useState(book?.slug || "");
+  const [autoSlug, setAutoSlug] = useState(!book);
+  const [coverImage, setCoverImage] = useState(book?.cover_image || "");
   const [coverImagePosition, setCoverImagePosition] = useState(
-    article?.cover_image_position || "50% 50%",
+    book?.cover_image_position || "50% 50%",
   );
   const [uploading, setUploading] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -37,6 +34,7 @@ export function ArticleForm({ article }: { article?: Article }) {
     try {
       const fd = new FormData();
       fd.append("file", file);
+      fd.append("bucket", "book-images");
       const result = await uploadImageAction(fd);
       if (result.url) {
         setCoverImage(result.url);
@@ -59,6 +57,7 @@ export function ArticleForm({ article }: { article?: Article }) {
       try {
         const fd = new FormData();
         fd.append("file", file);
+        fd.append("bucket", "book-images");
         const result = await uploadImageAction(fd);
         return result.url || null;
       } catch {
@@ -81,11 +80,11 @@ export function ArticleForm({ article }: { article?: Article }) {
       <style>{FORM_STYLES}</style>
 
       {/* Hidden fields */}
-      {article && <input type="hidden" name="id" value={article.id} />}
+      {book && <input type="hidden" name="id" value={book.id} />}
       <input
         type="hidden"
         name="date"
-        value={article?.date || new Date().toISOString().split("T")[0]}
+        value={book?.date || new Date().toISOString().split("T")[0]}
       />
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="cover_image" value={coverImage} />
@@ -112,7 +111,7 @@ export function ArticleForm({ article }: { article?: Article }) {
       {/* ─── Top Action Bar ────────────────────────────────── */}
       <div className="ss-form-topbar">
         <Link
-          href="/admin/articles"
+          href="/admin/books"
           className="ss-form-back"
           style={{ fontFamily: font }}
         >
@@ -128,13 +127,13 @@ export function ArticleForm({ article }: { article?: Article }) {
           >
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          {article ? "Back" : "Articles"}
+          {book ? "Back" : "Books"}
         </Link>
 
         <div className="ss-form-actions">
           <select
             name="status"
-            defaultValue={article?.status || "draft"}
+            defaultValue={book?.status || "draft"}
             className="ss-form-status"
             style={{ fontFamily: font }}
           >
@@ -147,7 +146,7 @@ export function ArticleForm({ article }: { article?: Article }) {
             className="ss-form-save"
             style={{ fontFamily: font }}
           >
-            {isPending ? "Saving..." : article ? "Update" : "Publish"}
+            {isPending ? "Saving..." : book ? "Update" : "Publish"}
           </button>
         </div>
       </div>
@@ -191,7 +190,6 @@ export function ArticleForm({ article }: { article?: Article }) {
             type="button"
             onClick={() => {
               setImageModalOpen(true);
-              // Pre-open file picker if no image yet
               setTimeout(() => fileInputRef.current?.click(), 100);
             }}
             className="ss-form-add-cover"
@@ -220,10 +218,21 @@ export function ArticleForm({ article }: { article?: Article }) {
           name="title"
           type="text"
           required
-          defaultValue={article?.title}
+          defaultValue={book?.title}
           onChange={handleTitleChange}
-          placeholder="Title"
+          placeholder="Book title"
           className="ss-form-title"
+          style={{ fontFamily: font }}
+        />
+
+        {/* Author */}
+        <input
+          name="author"
+          type="text"
+          required
+          defaultValue={book?.author}
+          placeholder="Author name"
+          className="ss-form-author"
           style={{ fontFamily: font }}
         />
 
@@ -231,7 +240,7 @@ export function ArticleForm({ article }: { article?: Article }) {
         <textarea
           name="excerpt"
           rows={1}
-          defaultValue={article?.excerpt || ""}
+          defaultValue={book?.excerpt || ""}
           placeholder="Add a subtitle..."
           className="ss-form-subtitle"
           style={{ fontFamily: font }}
@@ -245,8 +254,8 @@ export function ArticleForm({ article }: { article?: Article }) {
         {/* Content editor */}
         <RichTextEditor
           name="content"
-          defaultValue={article?.content || ""}
-          placeholder="Start writing..."
+          defaultValue={book?.content || ""}
+          placeholder="Start writing your notes..."
           required
           onImageUpload={handleContentImageUpload}
           borderless
@@ -390,7 +399,6 @@ export function ArticleForm({ article }: { article?: Article }) {
 // ─── Styles ───────────────────────────────────────────────────────
 
 const FORM_STYLES = `
-  /* ── Error ────────────────────────────────── */
   .ss-form-error {
     padding: 10px 16px;
     border-radius: 8px;
@@ -400,7 +408,6 @@ const FORM_STYLES = `
     margin-bottom: 12px;
   }
 
-  /* ── Top Action Bar ──────────────────────── */
   .ss-form-topbar {
     display: flex;
     align-items: center;
@@ -434,9 +441,7 @@ const FORM_STYLES = `
     cursor: pointer;
     outline: none;
   }
-  .ss-form-status:focus {
-    border-color: #d1d5db;
-  }
+  .ss-form-status:focus { border-color: #d1d5db; }
   .ss-form-save {
     padding: 7px 20px;
     border: none;
@@ -451,7 +456,6 @@ const FORM_STYLES = `
   .ss-form-save:hover { opacity: 0.85; }
   .ss-form-save:disabled { opacity: 0.4; cursor: default; }
 
-  /* ── Editor Card ─────────────────────────── */
   .ss-form-card {
     background: #fff;
     border-radius: 10px;
@@ -459,7 +463,6 @@ const FORM_STYLES = `
     overflow: hidden;
   }
 
-  /* Cover image */
   .ss-form-add-cover {
     display: flex;
     align-items: center;
@@ -496,7 +499,7 @@ const FORM_STYLES = `
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: background 0.2s;
+    transition: background 0.2s, opacity 0.2s;
     opacity: 0;
   }
   .ss-form-cover-preview:hover .ss-form-cover-overlay {
@@ -518,7 +521,6 @@ const FORM_STYLES = `
   .ss-form-cover-action:hover { background: rgba(255,255,255,0.35); }
   .ss-form-cover-remove:hover { background: rgba(239,68,68,0.7); }
 
-  /* Title */
   .ss-form-title {
     display: block;
     width: 100%;
@@ -534,7 +536,19 @@ const FORM_STYLES = `
   }
   .ss-form-title::placeholder { color: #d1d5db; }
 
-  /* Subtitle / excerpt */
+  .ss-form-author {
+    display: block;
+    width: 100%;
+    padding: 6px 40px 0;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: #6b7280;
+    background: transparent;
+    line-height: 1.4;
+  }
+  .ss-form-author::placeholder { color: #d1d5db; }
+
   .ss-form-subtitle {
     display: block;
     width: 100%;
@@ -550,7 +564,6 @@ const FORM_STYLES = `
   }
   .ss-form-subtitle::placeholder { color: #d1d5db; }
 
-  /* ── Settings Footer ─────────────────────── */
   .ss-form-footer {
     margin-top: 12px;
     padding: 12px 0;
@@ -577,7 +590,6 @@ const FORM_STYLES = `
   }
   .ss-form-slug-input:focus { border-color: #d1d5db; }
 
-  /* ── Image Modal ─────────────────────────── */
   .ss-modal-backdrop {
     position: fixed;
     inset: 0;

@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState, useState, useRef, useCallback } from "react";
-import { saveArticleAction, uploadImageAction } from "@/app/admin/actions";
-import type { Article } from "@/lib/articles";
+import { saveNoteAction, uploadImageAction } from "@/app/admin/actions";
+import type { Note } from "@/lib/notes";
 import { ImagePositioner } from "./ImagePositioner";
 import { RichTextEditor } from "./RichTextEditor";
 import Link from "next/link";
@@ -16,16 +16,13 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export function ArticleForm({ article }: { article?: Article }) {
-  const [state, formAction, isPending] = useActionState(
-    saveArticleAction,
-    null,
-  );
-  const [slug, setSlug] = useState(article?.slug || "");
-  const [autoSlug, setAutoSlug] = useState(!article);
-  const [coverImage, setCoverImage] = useState(article?.cover_image || "");
+export function NoteForm({ note }: { note?: Note }) {
+  const [state, formAction, isPending] = useActionState(saveNoteAction, null);
+  const [slug, setSlug] = useState(note?.slug || "");
+  const [autoSlug, setAutoSlug] = useState(!note);
+  const [coverImage, setCoverImage] = useState(note?.cover_image || "");
   const [coverImagePosition, setCoverImagePosition] = useState(
-    article?.cover_image_position || "50% 50%",
+    note?.cover_image_position || "50% 50%",
   );
   const [uploading, setUploading] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -81,11 +78,11 @@ export function ArticleForm({ article }: { article?: Article }) {
       <style>{FORM_STYLES}</style>
 
       {/* Hidden fields */}
-      {article && <input type="hidden" name="id" value={article.id} />}
+      {note && <input type="hidden" name="id" value={note.id} />}
       <input
         type="hidden"
         name="date"
-        value={article?.date || new Date().toISOString().split("T")[0]}
+        value={note?.date || new Date().toISOString().split("T")[0]}
       />
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="cover_image" value={coverImage} />
@@ -112,7 +109,7 @@ export function ArticleForm({ article }: { article?: Article }) {
       {/* ─── Top Action Bar ────────────────────────────────── */}
       <div className="ss-form-topbar">
         <Link
-          href="/admin/articles"
+          href="/admin/notes"
           className="ss-form-back"
           style={{ fontFamily: font }}
         >
@@ -128,13 +125,13 @@ export function ArticleForm({ article }: { article?: Article }) {
           >
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          {article ? "Back" : "Articles"}
+          {note ? "Back" : "Notes"}
         </Link>
 
         <div className="ss-form-actions">
           <select
             name="status"
-            defaultValue={article?.status || "draft"}
+            defaultValue={note?.status || "draft"}
             className="ss-form-status"
             style={{ fontFamily: font }}
           >
@@ -147,7 +144,7 @@ export function ArticleForm({ article }: { article?: Article }) {
             className="ss-form-save"
             style={{ fontFamily: font }}
           >
-            {isPending ? "Saving..." : article ? "Update" : "Publish"}
+            {isPending ? "Saving..." : note ? "Update" : "Publish"}
           </button>
         </div>
       </div>
@@ -191,7 +188,6 @@ export function ArticleForm({ article }: { article?: Article }) {
             type="button"
             onClick={() => {
               setImageModalOpen(true);
-              // Pre-open file picker if no image yet
               setTimeout(() => fileInputRef.current?.click(), 100);
             }}
             className="ss-form-add-cover"
@@ -220,7 +216,7 @@ export function ArticleForm({ article }: { article?: Article }) {
           name="title"
           type="text"
           required
-          defaultValue={article?.title}
+          defaultValue={note?.title}
           onChange={handleTitleChange}
           placeholder="Title"
           className="ss-form-title"
@@ -231,7 +227,7 @@ export function ArticleForm({ article }: { article?: Article }) {
         <textarea
           name="excerpt"
           rows={1}
-          defaultValue={article?.excerpt || ""}
+          defaultValue={note?.excerpt || ""}
           placeholder="Add a subtitle..."
           className="ss-form-subtitle"
           style={{ fontFamily: font }}
@@ -245,7 +241,7 @@ export function ArticleForm({ article }: { article?: Article }) {
         {/* Content editor */}
         <RichTextEditor
           name="content"
-          defaultValue={article?.content || ""}
+          defaultValue={note?.content || ""}
           placeholder="Start writing..."
           required
           onImageUpload={handleContentImageUpload}
@@ -387,283 +383,50 @@ export function ArticleForm({ article }: { article?: Article }) {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────
+// ─── Styles (reuses same class names as ArticleForm) ──────────────
 
 const FORM_STYLES = `
-  /* ── Error ────────────────────────────────── */
-  .ss-form-error {
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    background: #fef2f2;
-    color: #dc2626;
-    margin-bottom: 12px;
-  }
-
-  /* ── Top Action Bar ──────────────────────── */
-  .ss-form-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 0;
-    margin-bottom: 8px;
-  }
-  .ss-form-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 14px;
-    color: #6b7280;
-    text-decoration: none;
-    transition: color 0.15s;
-  }
+  .ss-form-error { padding: 10px 16px; border-radius: 8px; font-size: 14px; background: #fef2f2; color: #dc2626; margin-bottom: 12px; }
+  .ss-form-topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; margin-bottom: 8px; }
+  .ss-form-back { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: #6b7280; text-decoration: none; transition: color 0.15s; }
   .ss-form-back:hover { color: #111; }
-
-  .ss-form-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .ss-form-status {
-    padding: 6px 10px;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-size: 13px;
-    color: #374151;
-    background: #fff;
-    cursor: pointer;
-    outline: none;
-  }
-  .ss-form-status:focus {
-    border-color: #d1d5db;
-  }
-  .ss-form-save {
-    padding: 7px 20px;
-    border: none;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #fff;
-    background: #111;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
+  .ss-form-actions { display: flex; align-items: center; gap: 8px; }
+  .ss-form-status { padding: 6px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; color: #374151; background: #fff; cursor: pointer; outline: none; }
+  .ss-form-status:focus { border-color: #d1d5db; }
+  .ss-form-save { padding: 7px 20px; border: none; border-radius: 20px; font-size: 14px; font-weight: 500; color: #fff; background: #111; cursor: pointer; transition: opacity 0.15s; }
   .ss-form-save:hover { opacity: 0.85; }
   .ss-form-save:disabled { opacity: 0.4; cursor: default; }
-
-  /* ── Editor Card ─────────────────────────── */
-  .ss-form-card {
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
-    overflow: hidden;
-  }
-
-  /* Cover image */
-  .ss-form-add-cover {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 40px;
-    font-size: 14px;
-    color: #9ca3af;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: color 0.15s;
-    width: 100%;
-  }
+  .ss-form-card { background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; }
+  .ss-form-add-cover { display: flex; align-items: center; gap: 8px; padding: 14px 40px; font-size: 14px; color: #9ca3af; background: transparent; border: none; cursor: pointer; transition: color 0.15s; width: 100%; }
   .ss-form-add-cover:hover { color: #6b7280; }
-
-  .ss-form-cover-preview {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 680 / 315;
-    overflow: hidden;
-    cursor: pointer;
-  }
-  .ss-form-cover-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .ss-form-cover-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background 0.2s;
-    opacity: 0;
-  }
-  .ss-form-cover-preview:hover .ss-form-cover-overlay {
-    background: rgba(0,0,0,0.4);
-    opacity: 1;
-  }
-  .ss-form-cover-action {
-    padding: 6px 16px;
-    border: none;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #fff;
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(4px);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
+  .ss-form-cover-preview { position: relative; width: 100%; aspect-ratio: 680/315; overflow: hidden; cursor: pointer; }
+  .ss-form-cover-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ss-form-cover-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0); display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; opacity: 0; }
+  .ss-form-cover-preview:hover .ss-form-cover-overlay { background: rgba(0,0,0,0.4); opacity: 1; }
+  .ss-form-cover-action { padding: 6px 16px; border: none; border-radius: 20px; font-size: 13px; font-weight: 500; color: #fff; background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); cursor: pointer; transition: background 0.15s; }
   .ss-form-cover-action:hover { background: rgba(255,255,255,0.35); }
   .ss-form-cover-remove:hover { background: rgba(239,68,68,0.7); }
-
-  /* Title */
-  .ss-form-title {
-    display: block;
-    width: 100%;
-    padding: 8px 40px 0;
-    border: none;
-    outline: none;
-    font-size: 32px;
-    font-weight: 700;
-    color: #111;
-    background: transparent;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
+  .ss-form-title { display: block; width: 100%; padding: 8px 40px 0; border: none; outline: none; font-size: 32px; font-weight: 700; color: #111; background: transparent; letter-spacing: -0.02em; line-height: 1.2; }
   .ss-form-title::placeholder { color: #d1d5db; }
-
-  /* Subtitle / excerpt */
-  .ss-form-subtitle {
-    display: block;
-    width: 100%;
-    padding: 6px 40px 16px;
-    border: none;
-    outline: none;
-    font-size: 17px;
-    color: #9ca3af;
-    background: transparent;
-    resize: none;
-    line-height: 1.5;
-    overflow: hidden;
-  }
+  .ss-form-subtitle { display: block; width: 100%; padding: 6px 40px 16px; border: none; outline: none; font-size: 17px; color: #9ca3af; background: transparent; resize: none; line-height: 1.5; overflow: hidden; }
   .ss-form-subtitle::placeholder { color: #d1d5db; }
-
-  /* ── Settings Footer ─────────────────────── */
-  .ss-form-footer {
-    margin-top: 12px;
-    padding: 12px 0;
-  }
-  .ss-form-slug-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .ss-form-slug-label {
-    font-size: 12px;
-    color: #9ca3af;
-    white-space: nowrap;
-  }
-  .ss-form-slug-input {
-    flex: 1;
-    padding: 4px 8px;
-    border: 1px solid #e5e7eb;
-    border-radius: 5px;
-    font-size: 12px;
-    color: #6b7280;
-    outline: none;
-    background: #fff;
-  }
+  .ss-form-footer { margin-top: 12px; padding: 12px 0; }
+  .ss-form-slug-row { display: flex; align-items: center; gap: 8px; }
+  .ss-form-slug-label { font-size: 12px; color: #9ca3af; white-space: nowrap; }
+  .ss-form-slug-input { flex: 1; padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 5px; font-size: 12px; color: #6b7280; outline: none; background: #fff; }
   .ss-form-slug-input:focus { border-color: #d1d5db; }
-
-  /* ── Image Modal ─────────────────────────── */
-  .ss-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    backdrop-filter: blur(2px);
-  }
-  .ss-modal-content {
-    background: #fff;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 680px;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-  }
-  .ss-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid #f3f4f6;
-  }
-  .ss-modal-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #111;
-  }
-  .ss-modal-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #6b7280;
-    transition: background 0.15s;
-  }
+  .ss-modal-backdrop { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 24px; backdrop-filter: blur(2px); }
+  .ss-modal-content { background: #fff; border-radius: 12px; width: 100%; max-width: 680px; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+  .ss-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f3f4f6; }
+  .ss-modal-title { font-size: 15px; font-weight: 600; color: #111; }
+  .ss-modal-close { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: transparent; border-radius: 6px; cursor: pointer; color: #6b7280; transition: background 0.15s; }
   .ss-modal-close:hover { background: #f3f4f6; color: #111; }
-
-  .ss-modal-body {
-    padding: 20px;
-    overflow-y: auto;
-  }
-
-  .ss-modal-upload {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 48px 24px;
-    border: 2px dashed #e5e7eb;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
+  .ss-modal-body { padding: 20px; overflow-y: auto; }
+  .ss-modal-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 48px 24px; border: 2px dashed #e5e7eb; border-radius: 10px; cursor: pointer; transition: border-color 0.15s; }
   .ss-modal-upload:hover { border-color: #d1d5db; }
   .ss-modal-upload-text { font-size: 14px; color: #6b7280; }
   .ss-modal-upload-hint { font-size: 12px; color: #9ca3af; }
-
-  .ss-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    padding: 12px 20px;
-    border-top: 1px solid #f3f4f6;
-  }
-  .ss-modal-done {
-    padding: 7px 24px;
-    border: none;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #fff;
-    background: #111;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
+  .ss-modal-footer { display: flex; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid #f3f4f6; }
+  .ss-modal-done { padding: 7px 24px; border: none; border-radius: 20px; font-size: 14px; font-weight: 500; color: #fff; background: #111; cursor: pointer; transition: opacity 0.15s; }
   .ss-modal-done:hover { opacity: 0.85; }
 `;
