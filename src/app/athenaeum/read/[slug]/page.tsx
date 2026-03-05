@@ -1,16 +1,10 @@
 import { getArticleBySlug } from "@/lib/articles";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { AllowScroll } from "@/components/AllowScroll";
-import {
-  AnimatedLine,
-  FixedRedLines,
-  AnimatedContent,
-} from "@/components/ArticleAnimations";
+import { ArticleShell } from "@/components/ArticleShell";
 import ReactMarkdown from "react-markdown";
 import type { Metadata } from "next";
 
-/** Check if content is HTML (from the rich text editor) vs markdown */
 function isHtmlContent(content: string): boolean {
   return /<(p|h[1-6]|ul|ol|blockquote|pre|div|img|hr|br)\b/i.test(content);
 }
@@ -51,249 +45,217 @@ export default async function ArticlePage({ params }: Props) {
   return (
     <>
       <AllowScroll />
-      <main className="min-h-screen" style={{ background: "#f3f0e9" }}>
-        {/* Fixed red accent marks — anchored to viewport center, don't scroll */}
-        <FixedRedLines />
-
-        <div
-          data-article-container
-          className="max-w-[730px] mx-auto min-h-screen flex overflow-hidden"
-        >
-          {/* Left decorative line — draws in from top on load */}
-          <AnimatedLine side="left" delay={0.05} />
-
-          {/* Content */}
-          <AnimatedContent className="flex-1 min-w-0 flex flex-col gap-5 p-6">
-            {/* Back button */}
-            <Link
-              href="/athenaeum"
-              className="text-sm hover:opacity-70 transition-opacity w-fit"
-              style={{
-                color: "#9d7c7c",
-                fontFamily: "var(--font-geist-sans)",
-              }}
+      <ArticleShell backHref="/athenaeum">
+        <div className="flex flex-col gap-10">
+          {article.cover_image && (
+            <div
+              className="w-full overflow-hidden"
+              style={{ aspectRatio: "680/315" }}
             >
-              back
-            </Link>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={article.cover_image}
+                alt=""
+                className="w-full h-full object-cover"
+                style={{
+                  objectPosition: article.cover_image_position || "50% 50%",
+                }}
+              />
+            </div>
+          )}
 
-            {/* Article content */}
-            <div className="flex flex-col gap-10">
-              {/* Hero image */}
-              {article.cover_image && (
-                <div
-                  className="w-full overflow-hidden"
-                  style={{ aspectRatio: "680/315" }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={article.cover_image}
-                    alt=""
-                    className="w-full h-full object-cover"
-                    style={{
-                      objectPosition: article.cover_image_position || "50% 50%",
-                    }}
-                  />
-                </div>
-              )}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <h1
+                className="text-2xl"
+                style={{
+                  color: "var(--article-title)",
+                  fontFamily: "var(--font-geist-sans)",
+                  fontWeight: 500,
+                }}
+              >
+                {article.title}
+              </h1>
+              <span
+                className="text-base shrink-0 ml-4"
+                style={{
+                  color: "var(--article-muted)",
+                  fontFamily: "var(--font-geist-sans)",
+                }}
+              >
+                {formatDate(article.date)}
+              </span>
+            </div>
 
-              {/* Text content */}
-              <div className="flex flex-col gap-2.5">
-                {/* Title + Date */}
-                <div className="flex items-center justify-between">
-                  <h1
-                    className="text-2xl"
-                    style={{
-                      color: "#670000",
-                      fontFamily: "var(--font-geist-sans)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {article.title}
-                  </h1>
-                  <span
-                    className="text-base shrink-0 ml-4"
-                    style={{
-                      color: "#9d7c7c",
-                      fontFamily: "var(--font-geist-sans)",
-                    }}
-                  >
-                    {formatDate(article.date)}
-                  </span>
-                </div>
-
-                {/* Body */}
-                {isHtmlContent(article.content) ? (
-                  <ArticleHtmlContent content={article.content} />
-                ) : (
-                  <article
-                    style={{
-                      color: "#9d7c7c",
-                      fontSize: "18px",
-                      fontFamily: "var(--font-geist-sans)",
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    <ReactMarkdown
-                      components={{
-                        p: ({ children }) => (
-                          <p style={{ marginBottom: "1.2em" }}>{children}</p>
-                        ),
-                        h1: ({ children }) => (
-                          <h2
-                            style={{
-                              color: "#670000",
-                              fontSize: "22px",
-                              fontWeight: 500,
-                              marginTop: "1.5em",
-                              marginBottom: "0.5em",
-                            }}
-                          >
-                            {children}
-                          </h2>
-                        ),
-                        h2: ({ children }) => (
-                          <h3
-                            style={{
-                              color: "#670000",
-                              fontSize: "20px",
-                              fontWeight: 500,
-                              marginTop: "1.5em",
-                              marginBottom: "0.5em",
-                            }}
-                          >
-                            {children}
-                          </h3>
-                        ),
-                        h3: ({ children }) => (
-                          <h4
-                            style={{
-                              color: "#7a5555",
-                              fontSize: "18px",
-                              fontWeight: 500,
-                              marginTop: "1.2em",
-                              marginBottom: "0.4em",
-                            }}
-                          >
-                            {children}
-                          </h4>
-                        ),
-                        strong: ({ children }) => (
-                          <strong style={{ color: "#7a5555", fontWeight: 500 }}>
-                            {children}
-                          </strong>
-                        ),
-                        em: ({ children }) => <em>{children}</em>,
-                        blockquote: ({ children }) => (
-                          <blockquote
-                            style={{
-                              borderLeft: "2px solid rgba(157, 124, 124, 0.4)",
-                              paddingLeft: "16px",
-                              margin: "1.2em 0",
-                              fontStyle: "italic",
-                            }}
-                          >
-                            {children}
-                          </blockquote>
-                        ),
-                        a: ({ children, href }) => (
-                          <a
-                            href={href}
-                            style={{
-                              color: "#670000",
-                              textDecoration: "underline",
-                            }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {children}
-                          </a>
-                        ),
-                        ul: ({ children }) => (
-                          <ul
-                            style={{
-                              listStyleType: "disc",
-                              paddingLeft: "1.5em",
-                              marginBottom: "1.2em",
-                            }}
-                          >
-                            {children}
-                          </ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol
-                            style={{
-                              listStyleType: "decimal",
-                              paddingLeft: "1.5em",
-                              marginBottom: "1.2em",
-                            }}
-                          >
-                            {children}
-                          </ol>
-                        ),
-                        li: ({ children }) => (
-                          <li style={{ marginBottom: "0.3em" }}>{children}</li>
-                        ),
-                        hr: () => (
-                          <hr
-                            style={{
-                              border: "none",
-                              borderTop: "1px solid rgba(157, 124, 124, 0.3)",
-                              margin: "2em 0",
-                            }}
-                          />
-                        ),
-                      }}
-                    >
-                      {article.content}
-                    </ReactMarkdown>
-                  </article>
-                )}
-
-                {/* Source attribution */}
-                {article.source &&
-                  article.source !== "original" &&
-                  article.source_url && (
-                    <div
-                      className="mt-8 pt-6"
-                      style={{
-                        borderTop: "1px solid rgba(157, 124, 124, 0.2)",
-                      }}
-                    >
-                      <a
-                        href={article.source_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm hover:opacity-70 transition-opacity"
+            {isHtmlContent(article.content) ? (
+              <ArticleHtmlContent content={article.content} />
+            ) : (
+              <article
+                style={{
+                  color: "var(--article-text)",
+                  fontSize: "18px",
+                  fontFamily: "var(--font-geist-sans)",
+                  lineHeight: 1.7,
+                }}
+              >
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => (
+                      <p style={{ marginBottom: "1.2em" }}>{children}</p>
+                    ),
+                    h1: ({ children }) => (
+                      <h2
                         style={{
-                          color: "#9d7c7c",
-                          fontFamily: "var(--font-geist-sans)",
+                          color: "var(--article-title)",
+                          fontSize: "22px",
+                          fontWeight: 500,
+                          marginTop: "1.5em",
+                          marginBottom: "0.5em",
                         }}
                       >
-                        Originally published on{" "}
-                        {article.source === "substack"
-                          ? "Substack"
-                          : "X (Twitter)"}
-                        {" →"}
+                        {children}
+                      </h2>
+                    ),
+                    h2: ({ children }) => (
+                      <h3
+                        style={{
+                          color: "var(--article-title)",
+                          fontSize: "20px",
+                          fontWeight: 500,
+                          marginTop: "1.5em",
+                          marginBottom: "0.5em",
+                        }}
+                      >
+                        {children}
+                      </h3>
+                    ),
+                    h3: ({ children }) => (
+                      <h4
+                        style={{
+                          color: "var(--article-strong)",
+                          fontSize: "18px",
+                          fontWeight: 500,
+                          marginTop: "1.2em",
+                          marginBottom: "0.4em",
+                        }}
+                      >
+                        {children}
+                      </h4>
+                    ),
+                    strong: ({ children }) => (
+                      <strong
+                        style={{
+                          color: "var(--article-strong)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {children}
+                      </strong>
+                    ),
+                    em: ({ children }) => <em>{children}</em>,
+                    blockquote: ({ children }) => (
+                      <blockquote
+                        style={{
+                          borderLeft: "2px solid var(--article-border)",
+                          paddingLeft: "16px",
+                          margin: "1.2em 0",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {children}
+                      </blockquote>
+                    ),
+                    a: ({ children, href }) => (
+                      <a
+                        href={href}
+                        style={{
+                          color: "var(--article-link)",
+                          textDecoration: "underline",
+                        }}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {children}
                       </a>
-                    </div>
-                  )}
-              </div>
-            </div>
-          </AnimatedContent>
+                    ),
+                    ul: ({ children }) => (
+                      <ul
+                        style={{
+                          listStyleType: "disc",
+                          paddingLeft: "1.5em",
+                          marginBottom: "1.2em",
+                        }}
+                      >
+                        {children}
+                      </ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol
+                        style={{
+                          listStyleType: "decimal",
+                          paddingLeft: "1.5em",
+                          marginBottom: "1.2em",
+                        }}
+                      >
+                        {children}
+                      </ol>
+                    ),
+                    li: ({ children }) => (
+                      <li style={{ marginBottom: "0.3em" }}>{children}</li>
+                    ),
+                    hr: () => (
+                      <hr
+                        style={{
+                          border: "none",
+                          borderTop: "1px solid var(--article-hr)",
+                          margin: "2em 0",
+                        }}
+                      />
+                    ),
+                  }}
+                >
+                  {article.content}
+                </ReactMarkdown>
+              </article>
+            )}
 
-          {/* Right decorative line — draws in from top on load */}
-          <AnimatedLine side="right" delay={0.3} />
+            {article.source &&
+              article.source !== "original" &&
+              article.source_url && (
+                <div
+                  className="mt-8 pt-6"
+                  style={{
+                    borderTop: "1px solid var(--article-source-border)",
+                  }}
+                >
+                  <a
+                    href={article.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm hover:opacity-70 transition-opacity"
+                    style={{
+                      color: "var(--article-muted)",
+                      fontFamily: "var(--font-geist-sans)",
+                    }}
+                  >
+                    Originally published on{" "}
+                    {article.source === "substack"
+                      ? "Substack"
+                      : "X (Twitter)"}
+                    {" →"}
+                  </a>
+                </div>
+              )}
+          </div>
         </div>
-      </main>
+      </ArticleShell>
     </>
   );
 }
 
-// ─── HTML Content Renderer ──────────────────────────────────────────
-
 const ARTICLE_HTML_STYLES = `
   .article-html {
-    color: #9d7c7c;
+    color: var(--article-text);
     font-size: 18px;
     font-family: var(--font-geist-sans);
     line-height: 1.7;
@@ -305,38 +267,38 @@ const ARTICLE_HTML_STYLES = `
     margin-bottom: 1.2em;
   }
   .article-html h1 {
-    color: #670000;
+    color: var(--article-title);
     font-size: 22px;
     font-weight: 500;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
   }
   .article-html h2 {
-    color: #670000;
+    color: var(--article-title);
     font-size: 20px;
     font-weight: 500;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
   }
   .article-html h3 {
-    color: #7a5555;
+    color: var(--article-strong);
     font-size: 18px;
     font-weight: 500;
     margin-top: 1.2em;
     margin-bottom: 0.4em;
   }
   .article-html strong {
-    color: #7a5555;
+    color: var(--article-strong);
     font-weight: 500;
   }
   .article-html blockquote {
-    border-left: 2px solid rgba(157, 124, 124, 0.4);
+    border-left: 2px solid var(--article-border);
     padding-left: 16px;
     margin: 1.2em 0;
     font-style: italic;
   }
   .article-html a {
-    color: #670000;
+    color: var(--article-link);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
@@ -358,19 +320,19 @@ const ARTICLE_HTML_STYLES = `
   }
   .article-html hr {
     border: none;
-    border-top: 1px solid rgba(157, 124, 124, 0.3);
+    border-top: 1px solid var(--article-hr);
     margin: 2em 0;
   }
   .article-html code {
-    background: rgba(157, 124, 124, 0.1);
+    background: var(--article-code-bg);
     padding: 2px 5px;
     border-radius: 3px;
     font-family: var(--font-space-mono), monospace;
     font-size: 0.9em;
   }
   .article-html pre {
-    background: #2a2020;
-    color: #e0d5d5;
+    background: var(--article-pre-bg);
+    color: var(--article-pre-text);
     padding: 16px 20px;
     border-radius: 6px;
     overflow-x: hidden;

@@ -2,7 +2,6 @@ import { getPublishedArticles } from "@/lib/articles";
 import { getPublishedBooks } from "@/lib/books";
 import { getPublishedNotes } from "@/lib/notes";
 import { AllowScroll } from "@/components/AllowScroll";
-import SiteNav from "@/components/SiteNav";
 import AtheneumContent from "@/components/AtheneumTabs";
 import type { Metadata } from "next";
 
@@ -26,12 +25,9 @@ export default async function AtheneumPage() {
       <main
         className="min-h-screen relative"
         style={{
-          background: "#1a1f3d",
           fontFamily: "var(--font-geist-sans), 'Helvetica Neue', sans-serif",
         }}
       >
-        <SiteNav />
-
         <AtheneumContent
           articles={articles.map((a) => ({
             id: a.id,

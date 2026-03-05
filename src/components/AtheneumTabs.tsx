@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import BookAnimation from "@/components/BookAnimation";
 import ToggleSwitch from "@/components/ToggleSwitch";
+import SiteNav from "@/components/SiteNav";
 
 interface ArticleItem {
   id: string;
@@ -35,6 +36,31 @@ interface AtheneumContentProps {
   books: BookItem[];
 }
 
+const themes = {
+  dark: {
+    bg: "#1a1f3d",
+    primary: "#fed",
+    secondary: "rgba(225, 213, 213, 0.75)",
+    tabActive: "#fed",
+    tabInactive: "#afa7af",
+    bookColor: "rgba(255, 238, 221, 0.6)",
+    toggleColor: "#fed",
+    toggleBorder: "rgba(255, 238, 221, 0.3)",
+    emptyText: "rgba(225, 213, 213, 0.5)",
+  },
+  light: {
+    bg: "#f0ebe3",
+    primary: "#670000",
+    secondary: "rgba(103, 0, 0, 0.55)",
+    tabActive: "#670000",
+    tabInactive: "#a09090",
+    bookColor: "rgba(103, 0, 0, 0.5)",
+    toggleColor: "#670000",
+    toggleBorder: "rgba(103, 0, 0, 0.3)",
+    emptyText: "rgba(103, 0, 0, 0.4)",
+  },
+} as const;
+
 function formatDate(dateStr: string) {
   const date = new Date(dateStr + "T00:00:00");
   return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
@@ -53,6 +79,9 @@ function AtheneumContentInner({
     return "essays";
   });
 
+  const [isDark, setIsDark] = useState(true);
+  const t = isDark ? themes.dark : themes.light;
+
   useEffect(() => {
     if (tabParam === "notes") setActiveTab("notes");
     else if (tabParam === "readings") setActiveTab("readings");
@@ -66,72 +95,74 @@ function AtheneumContentInner({
   ];
 
   return (
-    <div className="flex h-[calc(100vh-80px)] px-10">
-      {/* ── Left sidebar ── */}
-      <div className="flex flex-col w-[354px] shrink-0 pb-10">
-        {/* Center group — vertically centered between nav and tabs */}
-        <div className="flex-1 flex items-center">
-          <div className="flex flex-col gap-5">
-            {/* Book animation viewport */}
+    <div
+      className="min-h-screen transition-colors duration-500"
+      style={{ background: t.bg }}
+    >
+      <SiteNav variant={isDark ? "dark" : "light"} />
+      <div className="flex justify-center px-6 pt-[50px] pb-10">
+        <div className="flex flex-col gap-[40px] w-[490px]">
+          <div className="flex flex-col gap-[20px]">
             <div className="w-[127px] h-[125px]">
-              <BookAnimation color="rgba(255, 238, 221, 0.6)" />
+              <BookAnimation color={t.bookColor} />
             </div>
 
-            {/* Title + Subtitle */}
             <div className="flex flex-col gap-[10px]">
               <h1
-                className="text-[24px] leading-tight"
-                style={{ color: "#fed", fontWeight: 500 }}
+                className="text-[24px] leading-tight transition-colors duration-500"
+                style={{ color: t.primary, fontWeight: 500 }}
               >
                 The Athenaeum
               </h1>
               <p
-                className="text-[16px]"
-                style={{
-                  color: "rgba(225, 213, 213, 0.75)",
-                  fontWeight: 400,
-                }}
+                className="text-[16px] transition-colors duration-500"
+                style={{ color: t.secondary, fontWeight: 400 }}
               >
                 Writing and reading is how I make sense of reality
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Bottom tabs */}
-        <div className="flex items-center gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className="text-[16px] cursor-pointer transition-colors duration-200 hover:opacity-90 p-[2px]"
-              style={{
-                color: activeTab === tab.key ? "#fed" : "#afa7af",
-                fontWeight: 400,
-                background: "none",
-                border: "none",
-                fontFamily: "inherit",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Right content list ── */}
-      <div className="flex-1 flex flex-row items-center self-stretch">
-        <div className="flex flex-col h-full w-full max-w-[490px] ml-auto">
-          {/* Toggle switch */}
-          <div className="p-[10px]">
-            <ToggleSwitch />
+          <div className="flex items-center gap-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className="text-[16px] cursor-pointer transition-colors duration-200 hover:opacity-90 p-[2px]"
+                style={{
+                  color: activeTab === tab.key ? t.tabActive : t.tabInactive,
+                  fontWeight: 400,
+                  background: "none",
+                  border: "none",
+                  fontFamily: "inherit",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {/* Scrollable list */}
-          <div className="flex-1 overflow-y-auto">
-            {activeTab === "essays" && <EssaysList articles={articles} />}
-            {activeTab === "notes" && <NotesList notes={notes} />}
-            {activeTab === "readings" && <ReadingsList books={books} />}
+          <div className="flex flex-col w-full">
+            <div className="p-[10px]">
+              <ToggleSwitch
+                isOn={isDark}
+                onToggle={() => setIsDark((v) => !v)}
+                activeColor={t.toggleColor}
+                borderColor={t.toggleBorder}
+              />
+            </div>
+
+            <div className="flex flex-col">
+              {activeTab === "essays" && (
+                <EssaysList articles={articles} theme={t} />
+              )}
+              {activeTab === "notes" && (
+                <NotesList notes={notes} theme={t} />
+              )}
+              {activeTab === "readings" && (
+                <ReadingsList books={books} theme={t} />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -147,8 +178,16 @@ export default function AtheneumContent(props: AtheneumContentProps) {
   );
 }
 
+type Theme = (typeof themes)[keyof typeof themes];
+
 /* ── Essays list (articles) ── */
-function EssaysList({ articles }: { articles: ArticleItem[] }) {
+function EssaysList({
+  articles,
+  theme: t,
+}: {
+  articles: ArticleItem[];
+  theme: Theme;
+}) {
   return (
     <>
       {articles.map((article, index) => {
@@ -162,19 +201,13 @@ function EssaysList({ articles }: { articles: ArticleItem[] }) {
             <div className="flex items-center justify-between py-[10px] px-[10px]">
               <span
                 className="text-[16px] transition-opacity group-hover:opacity-70"
-                style={{
-                  color: "#fed",
-                  fontWeight: isFirst ? 500 : 400,
-                }}
+                style={{ color: t.primary, fontWeight: isFirst ? 500 : 400 }}
               >
                 {article.title}
               </span>
               <span
                 className="text-[16px] shrink-0 ml-4"
-                style={{
-                  color: "rgba(225, 213, 213, 0.75)",
-                  fontWeight: 400,
-                }}
+                style={{ color: t.secondary, fontWeight: 400 }}
               >
                 {formatDate(article.date)}
               </span>
@@ -186,7 +219,7 @@ function EssaysList({ articles }: { articles: ArticleItem[] }) {
       {articles.length === 0 && (
         <p
           className="text-[16px] py-3 px-[10px]"
-          style={{ color: "rgba(225, 213, 213, 0.5)" }}
+          style={{ color: t.emptyText }}
         >
           No essays yet.
         </p>
@@ -196,7 +229,13 @@ function EssaysList({ articles }: { articles: ArticleItem[] }) {
 }
 
 /* ── Notes list ── */
-function NotesList({ notes }: { notes: NoteItem[] }) {
+function NotesList({
+  notes,
+  theme: t,
+}: {
+  notes: NoteItem[];
+  theme: Theme;
+}) {
   return (
     <>
       {notes.map((note, index) => {
@@ -210,19 +249,13 @@ function NotesList({ notes }: { notes: NoteItem[] }) {
             <div className="flex items-center justify-between py-[10px] px-[10px]">
               <span
                 className="text-[16px] transition-opacity group-hover:opacity-70"
-                style={{
-                  color: "#fed",
-                  fontWeight: isFirst ? 500 : 400,
-                }}
+                style={{ color: t.primary, fontWeight: isFirst ? 500 : 400 }}
               >
                 {note.title}
               </span>
               <span
                 className="text-[16px] shrink-0 ml-4"
-                style={{
-                  color: "rgba(225, 213, 213, 0.75)",
-                  fontWeight: 400,
-                }}
+                style={{ color: t.secondary, fontWeight: 400 }}
               >
                 {formatDate(note.date)}
               </span>
@@ -234,7 +267,7 @@ function NotesList({ notes }: { notes: NoteItem[] }) {
       {notes.length === 0 && (
         <p
           className="text-[16px] py-3 px-[10px]"
-          style={{ color: "rgba(225, 213, 213, 0.5)" }}
+          style={{ color: t.emptyText }}
         >
           No notes yet.
         </p>
@@ -244,7 +277,13 @@ function NotesList({ notes }: { notes: NoteItem[] }) {
 }
 
 /* ── Readings list ── */
-function ReadingsList({ books }: { books: BookItem[] }) {
+function ReadingsList({
+  books,
+  theme: t,
+}: {
+  books: BookItem[];
+  theme: Theme;
+}) {
   return (
     <>
       {books.map((book, index) => {
@@ -258,19 +297,13 @@ function ReadingsList({ books }: { books: BookItem[] }) {
             <div className="flex items-center justify-between py-[10px] px-[10px]">
               <span
                 className="text-[16px] transition-opacity group-hover:opacity-70"
-                style={{
-                  color: "#fed",
-                  fontWeight: isFirst ? 500 : 400,
-                }}
+                style={{ color: t.primary, fontWeight: isFirst ? 500 : 400 }}
               >
                 {book.title}
               </span>
               <span
                 className="text-[16px] shrink-0 ml-4"
-                style={{
-                  color: "rgba(225, 213, 213, 0.75)",
-                  fontWeight: 400,
-                }}
+                style={{ color: t.secondary, fontWeight: 400 }}
               >
                 {book.author}
               </span>
@@ -282,7 +315,7 @@ function ReadingsList({ books }: { books: BookItem[] }) {
       {books.length === 0 && (
         <p
           className="text-[16px] py-3 px-[10px]"
-          style={{ color: "rgba(225, 213, 213, 0.5)" }}
+          style={{ color: t.emptyText }}
         >
           No books yet.
         </p>

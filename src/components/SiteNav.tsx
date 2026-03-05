@@ -33,39 +33,40 @@ export default function SiteNav({ variant = "dark" }: SiteNavProps) {
 
   return (
     <nav
-      className="flex items-center gap-2 px-10 pt-10"
+      className="flex items-center justify-between w-full px-6 pt-5"
       style={{
         fontFamily: "var(--font-geist-sans), 'Helvetica Neue', sans-serif",
       }}
     >
-      {/* Chinese surname as logo / home link */}
       <Link
         href="/"
-        className="flex items-center justify-center transition-opacity duration-300 hover:opacity-80 mr-1"
+        className="flex items-center justify-center transition-opacity duration-300 hover:opacity-80 rounded-[1px]"
         style={{
           fontFamily: "'BiauKai', 'BiauKaiTC', 'STKaiti', 'KaiTi', serif",
           fontSize: "19px",
           width: 28,
           height: 28,
           color: variant === "dark" ? "#1a1f3d" : "#fed",
-          backgroundColor: variant === "dark" ? "#f3f0e9" : "#670000",
+          backgroundColor: variant === "dark" ? "#fed" : "#670000",
         }}
       >
         胡
       </Link>
 
-      {navItems.map((item) => (
-        <Link
-          key={item.label}
-          href={item.href}
-          className="text-[16px] p-[2px] transition-colors duration-300 hover:opacity-90"
-          style={{
-            color: isActive(item.href) ? activeColor : inactiveColor,
-          }}
-        >
-          {item.label}
-        </Link>
-      ))}
+      <div className="flex items-center gap-2">
+        {navItems.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className="text-[16px] p-[2px] transition-colors duration-300 hover:opacity-90"
+            style={{
+              color: isActive(item.href) ? activeColor : inactiveColor,
+            }}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 }

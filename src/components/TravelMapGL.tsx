@@ -47,7 +47,7 @@ export default function TravelMapGL({
   lat,
   lng,
   zoom = 6,
-  paddingLeft = 300,
+  paddingLeft = 0,
 }: TravelMapGLProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);

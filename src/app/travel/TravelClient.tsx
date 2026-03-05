@@ -78,77 +78,48 @@ export default function TravelClient({
 
   return (
     <main
-      className="h-screen w-screen overflow-hidden relative"
+      className="h-screen w-screen overflow-hidden relative flex"
       style={{ backgroundColor: BG_COLOR }}
     >
-      {/* Full-screen map — masked so it fades out on the left edge */}
+      {/* Site navigation — spans full width above both panels */}
+      <div className="absolute left-0 top-0 w-full z-20">
+        <SiteNav />
+      </div>
+
+      {/* Left panel — solid background, destination nav + city info */}
       <div
-        className="absolute inset-0"
-        style={{
-          WebkitMaskImage: `linear-gradient(to right,
-            transparent 0%,
-            transparent 13%,
-            rgba(0,0,0,0.03) 19%,
-            rgba(0,0,0,0.07) 23%,
-            rgba(0,0,0,0.13) 26%,
-            rgba(0,0,0,0.22) 30%,
-            rgba(0,0,0,0.35) 34%,
-            rgba(0,0,0,0.52) 38%,
-            rgba(0,0,0,0.72) 42%,
-            rgba(0,0,0,0.88) 47%,
-            black 53%
-          )`,
-          maskImage: `linear-gradient(to right,
-            transparent 0%,
-            transparent 13%,
-            rgba(0,0,0,0.03) 19%,
-            rgba(0,0,0,0.07) 23%,
-            rgba(0,0,0,0.13) 26%,
-            rgba(0,0,0,0.22) 30%,
-            rgba(0,0,0,0.35) 34%,
-            rgba(0,0,0,0.52) 38%,
-            rgba(0,0,0,0.72) 42%,
-            rgba(0,0,0,0.88) 47%,
-            black 53%
-          )`,
-        }}
+        className="relative z-10 flex flex-col h-full shrink-0"
+        style={{ width: 320, backgroundColor: BG_COLOR }}
       >
+        <div className="flex-1 flex items-center pl-8">
+          <DestinationList
+            destinations={destinations}
+            activeIndex={activeDestIndex}
+            onSelect={setActiveDestIndex}
+            bgColor={BG_COLOR}
+            hasLog={!!activeLog}
+            onViewLog={handleViewLog}
+          />
+        </div>
+
+        <div className="pb-8 pl-8" style={{ color: "#FFEEDD" }}>
+          <p className="text-[10px] font-mono uppercase tracking-widest opacity-40 mb-1">
+            {activeDestination.coords}
+          </p>
+          <p className="text-[11px] font-sans opacity-50 max-w-[260px] leading-relaxed">
+            {activeDestination.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Right panel — map in its own container, no gradient mask */}
+      <div className="flex-1 h-full relative overflow-hidden">
         <TravelMapGL
           lat={activeDestination.lat}
           lng={activeDestination.lng}
           zoom={6}
-          paddingLeft={380}
+          paddingLeft={0}
         />
-      </div>
-
-      {/* Site navigation */}
-      <div className="absolute left-0 top-0 z-20">
-        <SiteNav />
-      </div>
-
-      {/* Destination List — Left side, vertically centered */}
-      <div className="absolute left-8 top-1/2 -translate-y-1/2 z-20">
-        <DestinationList
-          destinations={destinations}
-          activeIndex={activeDestIndex}
-          onSelect={setActiveDestIndex}
-          bgColor={BG_COLOR}
-          hasLog={!!activeLog}
-          onViewLog={handleViewLog}
-        />
-      </div>
-
-      {/* Active city info — bottom left */}
-      <div
-        className="absolute bottom-8 left-8 z-20"
-        style={{ color: "#FFEEDD" }}
-      >
-        <p className="text-[10px] font-mono uppercase tracking-widest opacity-40 mb-1">
-          {activeDestination.coords}
-        </p>
-        <p className="text-[11px] font-sans opacity-50 max-w-[260px] leading-relaxed">
-          {activeDestination.description}
-        </p>
       </div>
 
       {/* Travel Log Panel — right side overlay */}
