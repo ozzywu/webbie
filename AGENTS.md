@@ -34,3 +34,6 @@ Without real Supabase credentials, the homepage (`/`), travel page (`/travel`), 
 - The build succeeds even with placeholder Supabase credentials; only runtime data-fetching pages fail.
 - No git hooks, CI/CD pipelines, or setup scripts exist in this repo.
 - SQL schema files in `/supabase/` are meant to be run manually in the Supabase SQL Editor, not locally.
+- The admin panel at `/admin` uses cookie-based auth (`admin_session`). After login it redirects to `/admin/articles`. Navigation: Articles, Notes, Books, Cities.
+- Content created via admin with status "published" is immediately visible on the public Athenaeum page (`/athenaeum`).
+- The `.env.local` file is gitignored. When secrets are injected as environment variables, write them to `.env.local` before starting the dev server so Next.js picks them up.
