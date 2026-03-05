@@ -46,6 +46,11 @@ export default async function AtheneumPage() {
             title: b.title,
             author: b.author,
             slug: b.slug,
+            date: b.date,
+            isbn: b.isbn,
+            cover_image: b.cover_image,
+            excerpt: b.excerpt,
+            content: b.content,
           }))}
         />
       </main>

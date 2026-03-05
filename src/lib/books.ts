@@ -6,6 +6,7 @@ export interface Book {
   author: string;
   slug: string;
   date: string;
+  isbn: string | null;
   cover_image: string | null;
   cover_image_position: string | null;
   content: string;

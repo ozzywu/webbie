@@ -223,6 +223,7 @@ export async function saveBookAction(
     author: formData.get("author") as string,
     slug: formData.get("slug") as string,
     date: formData.get("date") as string,
+    isbn: (formData.get("isbn") as string) || null,
     cover_image: (formData.get("cover_image") as string) || null,
     cover_image_position:
       (formData.get("cover_image_position") as string) || "50% 50%",
