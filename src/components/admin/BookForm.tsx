@@ -266,7 +266,6 @@ export function BookForm({ book }: { book?: Book }) {
           name="content"
           defaultValue={book?.content || ""}
           placeholder="Start writing your notes..."
-          required
           onImageUpload={handleContentImageUpload}
           borderless
         />
