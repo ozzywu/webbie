@@ -6,6 +6,7 @@ import { createArticle, updateArticle, deleteArticle } from "@/lib/articles";
 import { createCityLog, updateCityLog, deleteCityLog } from "@/lib/city-logs";
 import { createBook, updateBook, deleteBook } from "@/lib/books";
 import { createNote, updateNote, deleteNote } from "@/lib/notes";
+import { updateBookmark, deleteBookmark } from "@/lib/bookmarks";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // --- Error helpers ---
@@ -223,6 +224,7 @@ export async function saveBookAction(
     author: formData.get("author") as string,
     slug: formData.get("slug") as string,
     date: formData.get("date") as string,
+    isbn: (formData.get("isbn") as string) || null,
     cover_image: (formData.get("cover_image") as string) || null,
     cover_image_position:
       (formData.get("cover_image_position") as string) || "50% 50%",
@@ -306,4 +308,48 @@ export async function deleteNoteAction(formData: FormData) {
   }
 
   redirect("/admin/notes");
+}
+
+// --- Bookmark CRUD ---
+
+export async function saveBookmarkAction(
+  _prevState: unknown,
+  formData: FormData,
+): Promise<{ error?: string } | void> {
+  await requireAuth();
+
+  const id = formData.get("id") as string | null;
+  if (!id) {
+    return { error: "Bookmark ID is required" };
+  }
+
+  const bookmarkData = {
+    title: formData.get("title") as string,
+    author: (formData.get("author") as string) || null,
+    notes: (formData.get("notes") as string) || "",
+    status: formData.get("status") as "saved" | "published",
+  };
+
+  try {
+    await updateBookmark(id, bookmarkData);
+  } catch (error: unknown) {
+    console.error("saveBookmarkAction error:", error);
+    return { error: extractErrorMessage(error, "Failed to save bookmark") };
+  }
+
+  redirect("/admin/bookmarks");
+}
+
+export async function deleteBookmarkAction(formData: FormData) {
+  await requireAuth();
+
+  const id = formData.get("id") as string;
+
+  try {
+    await deleteBookmark(id);
+  } catch (error) {
+    console.error("Delete failed:", error);
+  }
+
+  redirect("/admin/bookmarks");
 }

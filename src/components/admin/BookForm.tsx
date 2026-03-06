@@ -236,6 +236,16 @@ export function BookForm({ book }: { book?: Book }) {
           style={{ fontFamily: font }}
         />
 
+        {/* ISBN */}
+        <input
+          name="isbn"
+          type="text"
+          defaultValue={book?.isbn || ""}
+          placeholder="ISBN (optional — used for auto cover image)"
+          className="ss-form-author"
+          style={{ fontFamily: font }}
+        />
+
         {/* Excerpt / subtitle */}
         <textarea
           name="excerpt"
@@ -256,7 +266,6 @@ export function BookForm({ book }: { book?: Book }) {
           name="content"
           defaultValue={book?.content || ""}
           placeholder="Start writing your notes..."
-          required
           onImageUpload={handleContentImageUpload}
           borderless
         />

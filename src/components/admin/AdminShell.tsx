@@ -5,8 +5,10 @@ import Link from "next/link";
 const NAV_LINKS = [
   { href: "/admin/articles", label: "Articles" },
   { href: "/admin/notes", label: "Notes" },
+  { href: "/admin/bookmarks", label: "Bookmarks" },
   { href: "/admin/books", label: "Books" },
   { href: "/admin/city-logs", label: "Cities" },
+  { href: "/admin/setup", label: "Setup" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

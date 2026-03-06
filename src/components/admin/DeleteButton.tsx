@@ -5,6 +5,7 @@ import {
   deleteCityLogAction,
   deleteBookAction,
   deleteNoteAction,
+  deleteBookmarkAction,
 } from "@/app/admin/actions";
 
 export function DeleteButton({
@@ -12,7 +13,7 @@ export function DeleteButton({
   action = "article",
 }: {
   id: string;
-  action?: "article" | "cityLog" | "book" | "note";
+  action?: "article" | "cityLog" | "book" | "note" | "bookmark";
 }) {
   const deleteAction =
     action === "cityLog"
@@ -21,7 +22,9 @@ export function DeleteButton({
         ? deleteBookAction
         : action === "note"
           ? deleteNoteAction
-          : deleteArticleAction;
+          : action === "bookmark"
+            ? deleteBookmarkAction
+            : deleteArticleAction;
   const label =
     action === "cityLog"
       ? "city log"
@@ -29,7 +32,9 @@ export function DeleteButton({
         ? "book"
         : action === "note"
           ? "note"
-          : "article";
+          : action === "bookmark"
+            ? "bookmark"
+            : "article";
 
   return (
     <form
