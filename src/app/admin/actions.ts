@@ -6,6 +6,10 @@ import { createArticle, updateArticle, deleteArticle } from "@/lib/articles";
 import { createCityLog, updateCityLog, deleteCityLog } from "@/lib/city-logs";
 import { createBook, updateBook, deleteBook } from "@/lib/books";
 import { createNote, updateNote, deleteNote } from "@/lib/notes";
+import {
+  getCoverUrlByIsbn,
+  searchCover,
+} from "@/lib/open-library";
 import { updateBookmark, deleteBookmark } from "@/lib/bookmarks";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -219,13 +223,26 @@ export async function saveBookAction(
   await requireAuth();
 
   const id = formData.get("id") as string | null;
+  const isbn = (formData.get("isbn") as string) || null;
+  let coverImage = (formData.get("cover_image") as string) || null;
+
+  if (!coverImage) {
+    if (isbn) {
+      coverImage = getCoverUrlByIsbn(isbn);
+    } else {
+      const title = formData.get("title") as string;
+      const author = formData.get("author") as string;
+      coverImage = await searchCover(title, author);
+    }
+  }
+
   const bookData = {
     title: formData.get("title") as string,
     author: formData.get("author") as string,
     slug: formData.get("slug") as string,
     date: formData.get("date") as string,
-    isbn: (formData.get("isbn") as string) || null,
-    cover_image: (formData.get("cover_image") as string) || null,
+    isbn,
+    cover_image: coverImage,
     cover_image_position:
       (formData.get("cover_image_position") as string) || "50% 50%",
     content: formData.get("content") as string,

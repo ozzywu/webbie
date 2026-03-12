@@ -2,7 +2,6 @@
 
 import { useEffect, useCallback, useState } from "react";
 import type { GalleryBook } from "./BookGallery";
-import { getCoverUrlByIsbn } from "@/lib/open-library";
 
 interface BookModalProps {
   book: GalleryBook | null;
@@ -12,51 +11,6 @@ interface BookModalProps {
     secondary: string;
     bg: string;
   };
-}
-
-function useBookCoverUrl(book: GalleryBook | null): string | null {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!book) {
-      setUrl(null);
-      return;
-    }
-
-    if (book.cover_image) {
-      setUrl(book.cover_image);
-      return;
-    }
-
-    if (book.isbn) {
-      setUrl(getCoverUrlByIsbn(book.isbn));
-      return;
-    }
-
-    let cancelled = false;
-    async function resolve() {
-      try {
-        const q = encodeURIComponent(`${book!.title} ${book!.author}`);
-        const res = await fetch(
-          `https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i`,
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        const coverId = data?.docs?.[0]?.cover_i;
-        if (coverId && !cancelled) {
-          setUrl(`https://covers.openlibrary.org/b/id/${coverId}-L.jpg`);
-        }
-      } catch {
-        // silent
-      }
-    }
-    resolve();
-    return () => {
-      cancelled = true;
-    };
-  }, [book]);
-
-  return url;
 }
 
 function formatDate(dateStr: string) {
@@ -81,12 +35,9 @@ function getPreviewText(book: GalleryBook): string | null {
 }
 
 export default function BookModal({ book, onClose, theme }: BookModalProps) {
-  const coverUrl = useBookCoverUrl(book);
-  const [imgLoaded, setImgLoaded] = useState(false);
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
-    setImgLoaded(false);
     setClosing(false);
   }, [book]);
 
@@ -144,17 +95,13 @@ export default function BookModal({ book, onClose, theme }: BookModalProps) {
           </button>
 
           <div className="bm-content">
-            {coverUrl && (
+            {book.cover_image && (
               <div className="bm-cover-wrap">
-                {!imgLoaded && <div className="bm-cover-skeleton" />}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={coverUrl}
+                  src={book.cover_image}
                   alt=""
                   className="bm-cover-img"
-                  style={{ opacity: imgLoaded ? 1 : 0 }}
-                  onLoad={() => setImgLoaded(true)}
-                  onError={() => setImgLoaded(true)}
                 />
               </div>
             )}
@@ -298,20 +245,6 @@ const MODAL_STYLES = `
     padding: 32px 32px 0;
   }
 
-  .bm-cover-skeleton {
-    width: 160px;
-    aspect-ratio: 2/3;
-    border-radius: 4px;
-    background: linear-gradient(110deg, rgba(128,128,128,0.08) 30%, rgba(128,128,128,0.15) 50%, rgba(128,128,128,0.08) 70%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
   .bm-cover-img {
     width: 160px;
     height: auto;
@@ -319,7 +252,6 @@ const MODAL_STYLES = `
     object-fit: contain;
     border-radius: 4px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    transition: opacity 0.3s ease;
   }
 
   .bm-details {

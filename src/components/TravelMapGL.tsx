@@ -10,6 +10,10 @@ interface TravelMapGLProps {
   zoom?: number;
   /** Left padding in px to offset for the overlaid destination list */
   paddingLeft?: number;
+  /** Whether the current destination has a travel log */
+  hasLog?: boolean;
+  /** Called when user clicks "View log" on the marker */
+  onViewLog?: () => void;
 }
 
 // Minimal silhouette style: cream land, dark red water
@@ -48,26 +52,39 @@ export default function TravelMapGL({
   lng,
   zoom = 6,
   paddingLeft = 0,
+  hasLog = false,
+  onViewLog,
 }: TravelMapGLProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerElRef = useRef<HTMLDivElement | null>(null);
+  const viewLogElRef = useRef<HTMLButtonElement | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
+  const onViewLogRef = useRef(onViewLog);
   const isFirstRender = useRef(true);
 
-  // Create the marker DOM element once
+  onViewLogRef.current = onViewLog;
+
+  // Create the marker DOM element once (pin + "View log" button below)
   const getMarkerEl = useCallback(() => {
     if (markerElRef.current) return markerElRef.current;
 
-    const el = document.createElement("div");
-    el.style.width = "10px";
-    el.style.height = "10px";
-    el.style.borderRadius = "50%";
-    el.style.backgroundColor = "#5A0000";
-    el.style.border = "2px solid #FFEEDD";
-    el.style.boxShadow =
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+    wrapper.style.alignItems = "center";
+    wrapper.style.gap = "8px";
+
+    const pin = document.createElement("div");
+    pin.style.width = "10px";
+    pin.style.height = "10px";
+    pin.style.borderRadius = "50%";
+    pin.style.backgroundColor = "#5A0000";
+    pin.style.border = "2px solid #FFEEDD";
+    pin.style.boxShadow =
       "0 0 0 4px rgba(90, 0, 0, 0.25), 0 0 20px rgba(255, 238, 221, 0.3)";
-    el.style.transition = "transform 0.3s ease";
+    pin.style.transition = "transform 0.3s ease";
+    pin.style.position = "relative";
 
     // Pulse ring
     const pulse = document.createElement("div");
@@ -80,10 +97,39 @@ export default function TravelMapGL({
     pulse.style.borderRadius = "50%";
     pulse.style.border = "1px solid rgba(255, 238, 221, 0.4)";
     pulse.style.animation = "map-pulse 2.5s ease-out infinite";
-    el.appendChild(pulse);
+    pin.appendChild(pulse);
+    wrapper.appendChild(pin);
 
-    markerElRef.current = el;
-    return el;
+    // "View log" button
+    const btn = document.createElement("button");
+    btn.textContent = "View log";
+    btn.style.cssText = `
+      font-family: var(--font-geist-sans), 'Helvetica Neue', sans-serif;
+      font-size: 11px;
+      color: #5A0000;
+      background: rgba(255, 238, 221, 0.85);
+      backdrop-filter: blur(8px);
+      border: none;
+      padding: 4px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 0.3s ease, transform 0.3s ease, background 0.15s ease;
+      pointer-events: none;
+    `;
+    btn.addEventListener("click", () => onViewLogRef.current?.());
+    btn.addEventListener("mouseenter", () => {
+      btn.style.background = "rgba(255, 238, 221, 1)";
+    });
+    btn.addEventListener("mouseleave", () => {
+      btn.style.background = "rgba(255, 238, 221, 0.85)";
+    });
+    viewLogElRef.current = btn;
+    wrapper.appendChild(btn);
+
+    markerElRef.current = wrapper;
+    return wrapper;
   }, []);
 
   // Initialize map
@@ -116,9 +162,9 @@ export default function TravelMapGL({
     map.getContainer().style.cursor = "default";
 
     // Hide the control container (logo, attribution)
-    const controlContainer = map.getContainer().querySelector(
-      ".maplibregl-control-container"
-    );
+    const controlContainer = map
+      .getContainer()
+      .querySelector(".maplibregl-control-container");
     if (controlContainer) {
       (controlContainer as HTMLElement).style.display = "none";
     }
@@ -127,7 +173,8 @@ export default function TravelMapGL({
     map.on("load", () => {
       const marker = new maplibregl.Marker({
         element: getMarkerEl(),
-        anchor: "center",
+        anchor: "top",
+        offset: [0, -5],
       })
         .setLngLat([lng, lat])
         .addTo(map);
@@ -146,6 +193,21 @@ export default function TravelMapGL({
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Show/hide "View log" button based on hasLog
+  useEffect(() => {
+    const btn = viewLogElRef.current;
+    if (!btn) return;
+    if (hasLog) {
+      btn.style.opacity = "1";
+      btn.style.transform = "translateY(0)";
+      btn.style.pointerEvents = "auto";
+    } else {
+      btn.style.opacity = "0";
+      btn.style.transform = "translateY(-4px)";
+      btn.style.pointerEvents = "none";
+    }
+  }, [hasLog]);
 
   // Fly to new position when destination changes
   useEffect(() => {

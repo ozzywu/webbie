@@ -99,9 +99,9 @@ function AtheneumContentInner({
       <SiteNav variant={isDark ? "dark" : "light"} />
       <div className="flex justify-center px-6 pt-[50px] pb-10">
         <div
-          className="flex flex-col gap-[40px] transition-all duration-500"
+          className="flex flex-col gap-[40px]"
           style={{
-            width: activeTab === "readings" ? "min(680px, 100%)" : "490px",
+            width: "min(680px, 100%)",
           }}
         >
           <div className="flex flex-col gap-[20px]">

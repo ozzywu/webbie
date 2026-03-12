@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { getCoverUrlByIsbn } from "@/lib/open-library";
+import { useState, useCallback } from "react";
 
 export interface GalleryBook {
   id: string;
@@ -26,70 +25,6 @@ interface BookGalleryProps {
   onBookSelect: (book: GalleryBook) => void;
 }
 
-const SEARCH_CACHE = new Map<string, string | null>();
-
-function useBookCover(book: GalleryBook) {
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    if (book.cover_image) {
-      setCoverUrl(book.cover_image);
-      setLoading(false);
-      return;
-    }
-
-    if (book.isbn) {
-      setCoverUrl(getCoverUrlByIsbn(book.isbn));
-      setLoading(false);
-      return;
-    }
-
-    const cacheKey = `${book.title}::${book.author}`;
-    if (SEARCH_CACHE.has(cacheKey)) {
-      setCoverUrl(SEARCH_CACHE.get(cacheKey) ?? null);
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function resolve() {
-      try {
-        const q = encodeURIComponent(`${book.title} ${book.author}`);
-        const res = await fetch(
-          `https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i`,
-        );
-        if (!res.ok) throw new Error("search failed");
-        const data = await res.json();
-        const coverId = data?.docs?.[0]?.cover_i;
-        const url = coverId
-          ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`
-          : null;
-        SEARCH_CACHE.set(cacheKey, url);
-        if (!cancelled) {
-          setCoverUrl(url);
-          setLoading(false);
-        }
-      } catch {
-        SEARCH_CACHE.set(cacheKey, null);
-        if (!cancelled) {
-          setLoading(false);
-          setError(true);
-        }
-      }
-    }
-
-    resolve();
-    return () => {
-      cancelled = true;
-    };
-  }, [book.cover_image, book.isbn, book.title, book.author]);
-
-  return { coverUrl, loading, error };
-}
-
 function BookCoverCard({
   book,
   theme,
@@ -101,20 +36,14 @@ function BookCoverCard({
   onClick: () => void;
   index: number;
 }) {
-  const { coverUrl, loading } = useBookCover(book);
   const [imgError, setImgError] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const cardRef = useRef<HTMLButtonElement>(null);
-
   const handleImgError = useCallback(() => setImgError(true), []);
-  const handleImgLoad = useCallback(() => setImgLoaded(true), []);
 
-  const showPlaceholder = !coverUrl || imgError;
+  const showImage = book.cover_image && !imgError;
   const animDelay = `${index * 40}ms`;
 
   return (
     <button
-      ref={cardRef}
       onClick={onClick}
       className="book-cover-card"
       style={
@@ -126,26 +55,20 @@ function BookCoverCard({
       }
     >
       <div className="book-cover-aspect">
-        {loading ? (
-          <div className="book-cover-skeleton" />
-        ) : showPlaceholder ? (
+        {showImage ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={book.cover_image!}
+            alt={`${book.title} by ${book.author}`}
+            className="book-cover-img"
+            loading="lazy"
+            onError={handleImgError}
+          />
+        ) : (
           <div className="book-cover-placeholder">
             <span className="book-cover-placeholder-title">{book.title}</span>
             <span className="book-cover-placeholder-author">{book.author}</span>
           </div>
-        ) : (
-          <>
-            {!imgLoaded && <div className="book-cover-skeleton" />}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={coverUrl}
-              alt={`${book.title} by ${book.author}`}
-              className="book-cover-img"
-              style={{ opacity: imgLoaded ? 1 : 0 }}
-              onError={handleImgError}
-              onLoad={handleImgLoad}
-            />
-          </>
         )}
       </div>
       <div className="book-cover-meta">
@@ -242,20 +165,6 @@ const GALLERY_STYLES = `
     border-radius: 4px;
     overflow: hidden;
     background: transparent;
-  }
-
-  .book-cover-skeleton {
-    position: absolute;
-    inset: 0;
-    border-radius: 4px;
-    background: linear-gradient(110deg, rgba(128,128,128,0.08) 30%, rgba(128,128,128,0.15) 50%, rgba(128,128,128,0.08) 70%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
   }
 
   .book-cover-img {
