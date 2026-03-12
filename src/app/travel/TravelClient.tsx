@@ -24,7 +24,6 @@ export default function TravelClient({
   cityLogs: CityLog[];
 }) {
   const [activeDestIndex, setActiveDestIndex] = useState(4); // Copenhagen default
-  const [logPanelOpen, setLogPanelOpen] = useState(false);
 
   const activeDestination = destinations[activeDestIndex];
 
@@ -37,6 +36,10 @@ export default function TravelClient({
     return map;
   }, [cityLogs]);
 
+  const activeLog = cityLogMap.get(activeDestination.city) || null;
+
+  const [logPanelOpen, setLogPanelOpen] = useState(false);
+
   // Indices of destinations that have logs (for cycling)
   const logIndices = useMemo(() => {
     return destinations
@@ -44,10 +47,16 @@ export default function TravelClient({
       .filter((i) => i !== -1);
   }, [cityLogMap]);
 
-  const activeLog = cityLogMap.get(activeDestination.city) || null;
+  const handleSelectDest = useCallback(
+    (index: number) => {
+      setActiveDestIndex(index);
+      setLogPanelOpen(false);
+    },
+    []
+  );
 
   const handleViewLog = useCallback(() => {
-    setLogPanelOpen((prev) => !prev);
+    setLogPanelOpen(true);
   }, []);
 
   const handleCloseLog = useCallback(() => {
@@ -72,6 +81,7 @@ export default function TravelClient({
       }
 
       setActiveDestIndex(logIndices[nextPos]);
+      setLogPanelOpen(true);
     },
     [activeDestIndex, logIndices]
   );
@@ -95,31 +105,30 @@ export default function TravelClient({
           <DestinationList
             destinations={destinations}
             activeIndex={activeDestIndex}
-            onSelect={setActiveDestIndex}
+            onSelect={handleSelectDest}
             bgColor={BG_COLOR}
-            hasLog={!!activeLog}
-            onViewLog={handleViewLog}
           />
         </div>
 
         <div className="pb-8 pl-8" style={{ color: "#FFEEDD" }}>
-          <p className="text-[10px] font-mono uppercase tracking-widest opacity-40 mb-1">
+          <p className="text-[10px] font-mono uppercase tracking-widest opacity-40">
             {activeDestination.coords}
-          </p>
-          <p className="text-[11px] font-sans opacity-50 max-w-[260px] leading-relaxed">
-            {activeDestination.description}
           </p>
         </div>
       </div>
 
-      {/* Right panel — map in its own container, no gradient mask */}
-      <div className="flex-1 h-full relative overflow-hidden">
-        <TravelMapGL
-          lat={activeDestination.lat}
-          lng={activeDestination.lng}
-          zoom={6}
-          paddingLeft={0}
-        />
+      {/* Right panel — map with 30px border on top, right, and bottom */}
+      <div className="flex-1 h-full relative pt-[60px] pr-[60px] pb-[60px]">
+        <div className="w-full h-full overflow-hidden" style={{ border: '1px solid rgba(255, 238, 221, 0.12)' }}>
+          <TravelMapGL
+            lat={activeDestination.lat}
+            lng={activeDestination.lng}
+            zoom={6}
+            paddingLeft={0}
+            hasLog={!!activeLog}
+            onViewLog={handleViewLog}
+          />
+        </div>
       </div>
 
       {/* Travel Log Panel — right side overlay */}

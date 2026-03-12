@@ -6,6 +6,9 @@ import { useSearchParams } from "next/navigation";
 import BookAnimation from "@/components/BookAnimation";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import SiteNav from "@/components/SiteNav";
+import BookGallery from "@/components/BookGallery";
+import BookModal from "@/components/BookModal";
+import type { GalleryBook } from "@/components/BookGallery";
 
 interface ArticleItem {
   id: string;
@@ -21,19 +24,12 @@ interface NoteItem {
   date: string;
 }
 
-interface BookItem {
-  id: string;
-  title: string;
-  author: string;
-  slug: string;
-}
-
 type TabKey = "essays" | "notes" | "readings";
 
 interface AtheneumContentProps {
   articles: ArticleItem[];
   notes: NoteItem[];
-  books: BookItem[];
+  books: GalleryBook[];
 }
 
 const themes = {
@@ -80,6 +76,7 @@ function AtheneumContentInner({
   });
 
   const [isDark, setIsDark] = useState(true);
+  const [selectedBook, setSelectedBook] = useState<GalleryBook | null>(null);
   const t = isDark ? themes.dark : themes.light;
 
   useEffect(() => {
@@ -101,7 +98,12 @@ function AtheneumContentInner({
     >
       <SiteNav variant={isDark ? "dark" : "light"} />
       <div className="flex justify-center px-6 pt-[50px] pb-10">
-        <div className="flex flex-col gap-[40px] w-[490px]">
+        <div
+          className="flex flex-col gap-[40px]"
+          style={{
+            width: "min(680px, 100%)",
+          }}
+        >
           <div className="flex flex-col gap-[20px]">
             <div className="w-[127px] h-[125px]">
               <BookAnimation color={t.bookColor} />
@@ -160,12 +162,22 @@ function AtheneumContentInner({
                 <NotesList notes={notes} theme={t} />
               )}
               {activeTab === "readings" && (
-                <ReadingsList books={books} theme={t} />
+                <BookGallery
+                  books={books}
+                  theme={t}
+                  onBookSelect={setSelectedBook}
+                />
               )}
             </div>
           </div>
         </div>
       </div>
+
+      <BookModal
+        book={selectedBook}
+        onClose={() => setSelectedBook(null)}
+        theme={t}
+      />
     </div>
   );
 }
@@ -276,50 +288,3 @@ function NotesList({
   );
 }
 
-/* ── Readings list ── */
-function ReadingsList({
-  books,
-  theme: t,
-}: {
-  books: BookItem[];
-  theme: Theme;
-}) {
-  return (
-    <>
-      {books.map((book, index) => {
-        const isFirst = index === 0;
-        return (
-          <Link
-            key={book.id}
-            href={`/athenaeum/book/${book.slug}`}
-            className="group block"
-          >
-            <div className="flex items-center justify-between py-[10px] px-[10px]">
-              <span
-                className="text-[16px] transition-opacity group-hover:opacity-70"
-                style={{ color: t.primary, fontWeight: isFirst ? 500 : 400 }}
-              >
-                {book.title}
-              </span>
-              <span
-                className="text-[16px] shrink-0 ml-4"
-                style={{ color: t.secondary, fontWeight: 400 }}
-              >
-                {book.author}
-              </span>
-            </div>
-          </Link>
-        );
-      })}
-
-      {books.length === 0 && (
-        <p
-          className="text-[16px] py-3 px-[10px]"
-          style={{ color: t.emptyText }}
-        >
-          No books yet.
-        </p>
-      )}
-    </>
-  );
-}
